@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(npm start)",
+      "Bash(lsof:*)",
+      "Bash(node:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nkt cloud 2026 신입사원 투자 집계 시스템\n\n- 실시간 평가 진행 및 결과 발표 시스템\n- 평가 완료 후 ''발표 시작'' 버튼 표시\n- 피드백 패널 오른쪽 사이드바로 이동\n- 4위 발표 애니메이션 느리게 \\(9초\\)\n- 3위 발표 애니메이션 빠르게 \\(4초\\)\n- 1,2위 동점 발표 애니메이션 빠르게 \\(4.6초\\)\n- 동점 오버레이 2위 금액 표시\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+    ]
+  }
+}

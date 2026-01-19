@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kt cloud 2026 신입사원 비즈니스 아키텍트 발표회</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0a0a2a 100%);
+      min-height: 100vh;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    /* 파티클 배경 */
+    #particles-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .particle {
+      position: absolute;
+      background: linear-gradient(45deg, #ffd700, #ffaa00);
+      border-radius: 50%;
+      opacity: 0.6;
+      animation: float 15s infinite ease-in-out;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-100px) rotate(180deg); }
+    }
+
+    /* 관리자 컨트롤 패널 */
+    .admin-panel {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .admin-toggle {
+      background: rgba(255, 215, 0, 0.9);
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .admin-controls {
+      display: none;
+      background: rgba(0, 0, 0, 0.9);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 15px;
+      padding: 20px;
+      width: 320px;
+    }
+
+    .admin-controls.show {
+      display: block;
+    }
+
+    .admin-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #ffd700;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .admin-section {
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .admin-section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .admin-label {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .admin-status {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #ffd700;
+    }
+
+    .admin-btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.2s;
+    }
+
+    .admin-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .admin-btn.primary {
+      background: linear-gradient(135deg, #ffd700, #ff6b35);
+      color: #000;
+    }
+
+    .admin-btn.secondary {
+      background: #3498db;
+      color: #fff;
+    }
+
+    .admin-btn.danger {
+      background: #e74c3c;
+      color: #fff;
+    }
+
+    .admin-btn.success {
+      background: #27ae60;
+      color: #fff;
+    }
+
+    .step-info {
+      text-align: center;
+      padding: 10px;
+      background: rgba(255, 215, 0, 0.1);
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .step-number {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #ffd700;
+    }
+
+    .step-desc {
+      font-size: 0.85rem;
+      color: #aaa;
+    }
+
+    .keyboard-hint {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #666;
+      margin-top: 10px;
+    }
+
+    .keyboard-hint kbd {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin: 0 2px;
+    }
+
+    /* 메인 컨테이너 */
+    .main-container {
+      position: relative;
+      z-index: 1;
+      padding: 40px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 헤더 */
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo {
+      font-size: 1.2rem;
+      color: #ff6b35;
+      font-weight: 700;
+      letter-spacing: 3px;
+      margin-bottom: 10px;
+    }
+
+    .title {
+      font-size: 3rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, #ffd700, #ff6b35, #ffd700);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 3s linear infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+
+    .subtitle {
+      font-size: 1.5rem;
+      color: #888;
+      margin-top: 10px;
+    }
+
+    /* Phase 1: 대기 화면 */
+    #waiting-screen {
+      flex: 1;
+      display: flex;
+      gap: 40px;
+    }
+
+    .teams-panel {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .team-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+
+    .team-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(255, 215, 0, 0.3);
+      box-shadow: 0 10px 40px rgba(255, 215, 0, 0.1);
+    }
+
+    .team-number {
+      display: inline-block;
+      background: linear-gradient(135deg, #ffd700, #ff6b35);
+      color: #000;
+      padding: 8px 20px;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+    }
+
+    .team-topic {
+      font-size: 1.4rem;
+      font-weight: 500;
+      line-height: 1.4;
+      color: #fff;
+    }
+
+    .qr-panel {
+      width: 400px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      backdrop-filter: blur(10px);
+    }
+
+    .qr-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #ffd700;
+    }
+
+    #qr-code {
+      background: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+
+    .qr-instruction {
+      text-align: center;
+      color: #888;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    /* 접속 현황 */
+    .connection-status {
+      margin-top: 30px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 15px;
+      width: 100%;
+    }
+
+    .connection-title {
+      font-size: 1rem;
+      color: #888;
+      margin-bottom: 10px;
+    }
+
+    .connection-count {
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: #ffd700;
+    }
+
+    .connection-list {
+      margin-top: 15px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .connection-item {
+      display: inline-block;
+      background: rgba(255, 215, 0, 0.2);
+      padding: 5px 12px;
+      border-radius: 20px;
+      margin: 3px;
+      font-size: 0.9rem;
+      animation: popIn 0.3s ease;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Phase 1: 평가 진행 화면 */
+    #evaluation-screen {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+    }
+
+    .progress-section {
+      text-align: center;
+      padding: 40px;
+    }
+
+    .progress-title {
+      font-size: 2rem;
+      margin-bottom: 30px;
+      color: #ffd700;
+    }
+
+    .progress-bar-container {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 30px;
+      height: 40px;
+      width: 80%;
+      margin: 0 auto;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #ffd700, #ff6b35);
+      border-radius: 30px;
+      transition: width 0.5s ease;
+      position: relative;
+    }
+
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: progressShine 2s infinite;
+    }
+
+    @keyframes progressShine {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .progress-text {
+      font-size: 3rem;
+      font-weight: 900;
+      margin-top: 30px;
+    }
+
+    .progress-detail {
+      font-size: 1.2rem;
+      color: #888;
+      margin-top: 10px;
+    }
+
+    .start-presentation-btn {
+      display: none;
+      margin-top: 30px;
+      padding: 20px 50px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #000;
+      background: linear-gradient(135deg, #ffd700, #ff6b35);
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 5px 30px rgba(255, 215, 0, 0.4);
+      transition: all 0.3s ease;
+      animation: pulseButton 2s infinite;
+    }
+
+    .start-presentation-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 40px rgba(255, 215, 0, 0.6);
+    }
+
+    .start-presentation-btn.show {
+      display: inline-block;
+    }
+
+    @keyframes pulseButton {
+      0%, 100% { box-shadow: 0 5px 30px rgba(255, 215, 0, 0.4); }
+      50% { box-shadow: 0 5px 50px rgba(255, 215, 0, 0.8); }
+    }
+
+    .evaluation-teams {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      padding: 20px 40px;
+    }
+
+    .eval-team-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 25px;
+      text-align: center;
+    }
+
+    .eval-team-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #ffd700;
+      margin-bottom: 10px;
+    }
+
+    .eval-team-topic {
+      font-size: 1rem;
+      color: #aaa;
+      line-height: 1.4;
+    }
+
+    /* Phase 2: 결과 발표 화면 */
+    #results-screen {
+      display: none;
+      flex: 1;
+      position: relative;
+      flex-direction: row;
+    }
+
+    /* 동전 비 효과 */
+    #coin-rain {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 50;
+      display: none;
+    }
+
+    .coin {
+      position: absolute;
+      font-size: 2rem;
+      animation: coinFall 3s linear forwards;
+    }
+
+    @keyframes coinFall {
+      0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* 순위 발표 그래프 */
+    .rank-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      height: 70vh;
+      padding: 40px;
+      gap: 40px;
+      flex: 1;
+    }
+
+    .rank-bar-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 200px;
+    }
+
+    .rank-info {
+      text-align: center;
+      margin-bottom: 20px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.5s ease;
+    }
+
+    .rank-info.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .rank-position {
+      font-size: 3rem;
+      font-weight: 900;
+      color: #ffd700;
+    }
+
+    .rank-team-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 10px 0;
+    }
+
+    .rank-amount {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #ff6b35;
+    }
+
+    .rank-bar {
+      width: 150px;
+      background: linear-gradient(180deg, rgba(255, 215, 0, 0.3), rgba(255, 107, 53, 0.3));
+      border-radius: 15px 15px 0 0;
+      position: relative;
+      height: 0;
+      /* transition 제거 - JS 애니메이션 사용 */
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .rank-bar.first { background: linear-gradient(180deg, #ffd700, #ff6b35); }
+    .rank-bar.second { background: linear-gradient(180deg, #c0c0c0, #a0a0a0); }
+    .rank-bar.third { background: linear-gradient(180deg, #cd7f32, #b87333); }
+    .rank-bar.fourth { background: linear-gradient(180deg, #4a4a4a, #3a3a3a); }
+
+    /* 하이라이트 효과 */
+    .rank-bar.highlighted {
+      box-shadow: 0 0 40px rgba(255, 215, 0, 0.9), 0 0 80px rgba(255, 107, 53, 0.5);
+      animation: barPulse 0.5s infinite alternate;
+      transform: scale(1.05);
+    }
+
+    /* 비활성 막대 */
+    .rank-bar.dimmed {
+      opacity: 0.3;
+      filter: grayscale(70%);
+      transition: all 1s ease;
+    }
+
+    .rank-info.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @keyframes barPulse {
+      0% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.7), 0 0 60px rgba(255, 107, 53, 0.3); }
+      100% { box-shadow: 0 0 60px rgba(255, 215, 0, 1), 0 0 100px rgba(255, 107, 53, 0.7); }
+    }
+
+    .coins-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23ffd700'/%3E%3Ccircle cx='50' cy='50' r='35' fill='%23ffaa00'/%3E%3Ctext x='50' y='60' text-anchor='middle' font-size='30' fill='%23aa7700'%3E₩%3C/text%3E%3C/svg%3E") repeat;
+      background-size: 30px 30px;
+      height: 100%;
+      opacity: 0.7;
+      /* 애니메이션 제거 - 막대 높이에 맞춰 자동으로 표시됨 */
+    }
+
+    @keyframes coinsRise {
+      0% { transform: translateY(100%); }
+      100% { transform: translateY(0); }
+    }
+
+    /* 피드백 패널 (오른쪽 영역) */
+    .feedback-panel {
+      display: none;
+      width: 400px;
+      height: 100%;
+      max-height: 70vh;
+      background: rgba(20, 20, 40, 0.9);
+      border-left: 2px solid rgba(255, 215, 0, 0.3);
+      padding: 30px;
+      overflow-y: auto;
+      animation: slideIn 0.3s ease;
+    }
+
+    .feedback-panel.show {
+      display: flex;
+      flex-direction: column;
+    }
+
+    @keyframes slideIn {
+      0% { opacity: 0; transform: translateX(20px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+
+    .feedback-header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+    }
+
+    .feedback-team {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #ffd700;
+    }
+
+    .feedback-amount {
+      font-size: 1.3rem;
+      color: #ff6b35;
+      margin-top: 10px;
+    }
+
+    .feedback-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .feedback-item {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 15px 20px;
+      border-radius: 10px;
+      border-left: 4px solid #ffd700;
+    }
+
+    .feedback-author {
+      font-size: 0.9rem;
+      color: #888;
+      margin-bottom: 5px;
+    }
+
+    .feedback-content {
+      font-size: 1.1rem;
+      line-height: 1.5;
+    }
+
+    /* 데드히트 효과 */
+    .deadheat-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 150;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .deadheat-content {
+      text-align: center;
+    }
+
+    .deadheat-text {
+      font-size: 5rem;
+      font-weight: 900;
+      color: #ffd700;
+      text-shadow: 0 0 50px rgba(255, 215, 0, 0.8);
+      animation: deadheatPulse 0.5s infinite alternate;
+    }
+
+    .deadheat-amount {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #ff6b35;
+      margin-top: 20px;
+    }
+
+    .deadheat-teams {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 30px;
+    }
+
+    .deadheat-vs {
+      color: #ffd700;
+      margin: 0 20px;
+    }
+
+    @keyframes deadheatPulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.1); }
+    }
+
+    /* 최종 결과 화면 */
+    .final-result {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0a0a2a 100%);
+      z-index: 200;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .winner-crown {
+      font-size: 8rem;
+      margin-bottom: 20px;
+      animation: crownBounce 1s infinite;
+    }
+
+    @keyframes crownBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+
+    .winner-title {
+      font-size: 2rem;
+      color: #888;
+      margin-bottom: 10px;
+    }
+
+    .winner-name {
+      font-size: 5rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, #ffd700, #ff6b35, #ffd700);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 2s linear infinite;
+    }
+
+    .winner-amount {
+      font-size: 3rem;
+      color: #ffd700;
+      margin-top: 20px;
+    }
+
+    .winner-diff {
+      font-size: 1.5rem;
+      color: #888;
+      margin-top: 10px;
+    }
+
+    .winner-feedback {
+      margin-top: 40px;
+      max-width: 800px;
+      text-align: center;
+    }
+
+    .winner-feedback-title {
+      font-size: 1.5rem;
+      color: #ffd700;
+      margin-bottom: 20px;
+    }
+
+    .winner-feedback-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .winner-feedback-item {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 15px 25px;
+      border-radius: 10px;
+      max-width: 350px;
+    }
+
+    /* 접속 알림 토스트 */
+    .toast-container {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      background: rgba(255, 215, 0, 0.9);
+      color: #000;
+      padding: 15px 30px;
+      border-radius: 30px;
+      font-weight: 700;
+      animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+    }
+
+    @keyframes toastIn {
+      0% { transform: translateY(50px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes toastOut {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-50px); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <!-- 파티클 배경 -->
+  <div id="particles-container"></div>
+
+  <!-- 동전 비 효과 -->
+  <div id="coin-rain"></div>
+
+  <!-- 관리자 컨트롤 패널 -->
+  <div class="admin-panel">
+    <button class="admin-toggle" onclick="toggleAdmin()">⚙️ MC 컨트롤</button>
+    <div class="admin-controls" id="admin-controls">
+      <div class="admin-title">🎤 MC 컨트롤 패널</div>
+
+      <div class="admin-section">
+        <div class="admin-label">현재 상태</div>
+        <div class="admin-status" id="admin-phase">대기 중</div>
+      </div>
+
+      <div class="admin-section" id="step-section" style="display:none;">
+        <div class="step-info">
+          <div class="step-number" id="current-step">1</div>
+          <div class="step-desc" id="step-desc">오프닝</div>
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <div class="admin-label">접속/평가 현황</div>
+        <div class="admin-status"><span id="admin-connected">0</span>명 접속 / <span id="admin-evaluated">0</span>명 완료</div>
+      </div>
+
+      <div class="admin-section" id="waiting-controls">
+        <button class="admin-btn success" onclick="startEvaluation()">▶️ 평가 시작</button>
+        <button class="admin-btn secondary" onclick="addDemoEvaluators()">🧪 데모 평가자 추가</button>
+      </div>
+
+      <div class="admin-section" id="eval-controls" style="display:none;">
+        <button class="admin-btn primary" onclick="addDemoEvaluation()">📝 데모 평가 추가</button>
+        <button class="admin-btn danger" onclick="forceClose()">⚠️ 강제 마감</button>
+      </div>
+
+      <div class="admin-section" id="results-controls" style="display:none;">
+        <button class="admin-btn primary" onclick="startPresentation()">🎬 결과 발표 시작</button>
+      </div>
+
+      <div class="admin-section" id="presentation-controls" style="display:none;">
+        <button class="admin-btn primary" id="next-btn" onclick="nextStep()">➡️ 다음 단계</button>
+        <div class="keyboard-hint">
+          <kbd>Space</kbd> 또는 <kbd>→</kbd> 키로 진행
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <button class="admin-btn danger" onclick="resetSystem()">🔄 전체 리셋</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 메인 컨테이너 -->
+  <div class="main-container">
+    <!-- 헤더 -->
+    <header class="header">
+      <div class="logo">kt cloud 2026</div>
+      <h1 class="title">신입사원 비즈니스 아키텍트 발표회</h1>
+      <p class="subtitle">투자 유치 경쟁 - 당신의 선택이 미래를 결정합니다</p>
+    </header>
+
+    <!-- Phase 1: 대기 화면 -->
+    <div id="waiting-screen">
+      <div class="teams-panel" id="teams-panel"></div>
+
+      <div class="qr-panel">
+        <h2 class="qr-title">📱 평가자 접속</h2>
+        <div id="qr-code"></div>
+        <p class="qr-instruction">
+          QR 코드를 스캔하여<br>
+          평가에 참여해주세요
+        </p>
+
+        <div class="connection-status">
+          <div class="connection-title">접속 현황</div>
+          <div class="connection-count"><span id="connected-count">0</span>명 접속</div>
+          <div class="connection-list" id="connection-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 1: 평가 진행 화면 -->
+    <div id="evaluation-screen">
+      <div class="progress-section">
+        <h2 class="progress-title">🔥 실시간 평가 진행 중</h2>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+        </div>
+        <div class="progress-text">
+          <span id="eval-count">0</span> / <span id="total-evaluators">12</span>
+        </div>
+        <div class="progress-detail" id="progress-detail">평가를 기다리는 중...</div>
+        <button class="start-presentation-btn" id="start-presentation-btn" onclick="startPresentation()">🎬 발표 시작</button>
+      </div>
+
+      <div class="evaluation-teams" id="evaluation-teams"></div>
+    </div>
+
+    <!-- Phase 2: 결과 발표 화면 -->
+    <div id="results-screen">
+      <div class="rank-container" id="rank-container"></div>
+      <!-- 피드백 패널 (오른쪽 영역) -->
+      <div class="feedback-panel" id="feedback-panel">
+        <div class="feedback-header">
+          <div class="feedback-team" id="popup-team-name"></div>
+          <div class="feedback-amount" id="popup-amount"></div>
+        </div>
+        <div class="feedback-list" id="feedback-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 데드히트 오버레이 -->
+  <div class="deadheat-overlay" id="deadheat-overlay">
+    <div class="deadheat-content">
+      <div class="deadheat-text">🔥 동점! 🔥</div>
+      <div class="deadheat-amount" id="deadheat-amount"></div>
+      <div class="deadheat-teams">
+        <span id="deadheat-team1"></span>
+        <span class="deadheat-vs">VS</span>
+        <span id="deadheat-team2"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 최종 결과 화면 -->
+  <div class="final-result" id="final-result">
+    <div class="winner-crown">👑</div>
+    <div class="winner-title">최종 투자 유치 1위</div>
+    <div class="winner-name" id="winner-name"></div>
+    <div class="winner-amount" id="winner-amount"></div>
+    <div class="winner-diff" id="winner-diff"></div>
+    <div class="winner-feedback">
+      <div class="winner-feedback-title">💬 임원진 피드백</div>
+      <div class="winner-feedback-list" id="winner-feedback-list"></div>
+    </div>
+  </div>
+
+  <!-- 토스트 컨테이너 -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script>
+    // ============ 상태 관리 ============
+    const socket = io();
+    let currentState = null;
+    let rankedTeams = [];
+    let presentationStep = 0;
+
+    const stepDescriptions = {
+      0: '준비 중',
+      1: '🎉 오프닝',
+      2: '4️⃣ 4위 발표',
+      3: '3️⃣ 3위 발표',
+      4: '🔥 1/2위 데드히트',
+      5: '📊 1/2위 점수 공개',
+      6: '👑 1위 하이라이트',
+      7: '🏆 최종 결과'
+    };
+
+    // ============ 관리자 패널 ============
+    function toggleAdmin() {
+      document.getElementById('admin-controls').classList.toggle('show');
+    }
+
+    function updateAdminUI() {
+      if (!currentState) return;
+
+      document.getElementById('admin-connected').textContent = currentState.connectedCount;
+      document.getElementById('admin-evaluated').textContent = currentState.evaluatedCount;
+
+      // Phase별 상태 표시
+      const phaseNames = {
+        'waiting': '대기 중',
+        'evaluating': '평가 진행 중',
+        'results': '집계 완료',
+        'presenting': '결과 발표 중'
+      };
+      document.getElementById('admin-phase').textContent = phaseNames[currentState.phase] || currentState.phase;
+
+      // 컨트롤 버튼 표시/숨김
+      document.getElementById('waiting-controls').style.display = currentState.phase === 'waiting' ? 'block' : 'none';
+      document.getElementById('eval-controls').style.display = currentState.phase === 'evaluating' ? 'block' : 'none';
+      document.getElementById('results-controls').style.display = currentState.phase === 'results' ? 'block' : 'none';
+      document.getElementById('presentation-controls').style.display = currentState.phase === 'presenting' ? 'block' : 'none';
+      document.getElementById('step-section').style.display = currentState.phase === 'presenting' ? 'block' : 'none';
+
+      if (currentState.phase === 'presenting') {
+        document.getElementById('current-step').textContent = presentationStep;
+        document.getElementById('step-desc').textContent = stepDescriptions[presentationStep];
+        document.getElementById('next-btn').disabled = presentationStep >= 5;
+      }
+    }
+
+    // ============ 관리자 액션 ============
+    function startEvaluation() {
+      socket.emit('admin:startEvaluation');
+      showToast('평가가 시작되었습니다!');
+    }
+
+    function forceClose() {
+      socket.emit('admin:forceClose');
+      showToast('평가가 강제 마감되었습니다');
+    }
+
+    function startPresentation() {
+      socket.emit('admin:startPresentation');
+    }
+
+    function nextStep() {
+      socket.emit('admin:nextStep');
+    }
+
+    function resetSystem() {
+      if (confirm('전체 시스템을 리셋하시겠습니까?')) {
+        socket.emit('admin:reset');
+      }
+    }
+
+    // 데모 평가자 추가
+    function addDemoEvaluators() {
+      const demoNames = ['김대표', '이전무', '박상무', '최이사', '정부장', '한차장'];
+      demoNames.forEach((name, i) => {
+        setTimeout(() => {
+          socket.emit('demo:addEvaluator', { name });
+        }, i * 500);
+      });
+      showToast('데모 평가자 6명 추가 중...');
+    }
+
+    // 데모 평가 추가
+    function addDemoEvaluation() {
+      socket.emit('demo:addEvaluation');
+      showToast('데모 평가 1건 추가');
+    }
+
+    // ============ 파티클 생성 ============
+    function createParticles() {
+      const container = document.getElementById('particles-container');
+      for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.width = Math.random() * 10 + 5 + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 15 + 's';
+        particle.style.animationDuration = Math.random() * 10 + 10 + 's';
+        container.appendChild(particle);
+      }
+    }
+
+    // ============ QR 코드 생성 ============
+    function generateQR() {
+      const url = `${window.location.origin}/mobile`;
+      const qrContainer = document.getElementById('qr-code');
+      qrContainer.innerHTML = '';
+      new QRCode(qrContainer, {
+        text: url,
+        width: 250,
+        height: 250,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+
+    // ============ UI 렌더링 ============
+    function renderTeams(teams) {
+      const panel = document.getElementById('teams-panel');
+      panel.innerHTML = teams.map(team => `
+        <div class="team-card">
+          <div class="team-number">${team.name}</div>
+          <div class="team-topic">${team.topic}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderEvaluationTeams(teams) {
+      const panel = document.getElementById('evaluation-teams');
+      panel.innerHTML = teams.map(team => `
+        <div class="eval-team-card">
+          <div class="eval-team-name">${team.name}</div>
+          <div class="eval-team-topic">${team.topic}</div>
+        </div>
+      `).join('');
+    }
+
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function showScreen(screenId) {
+      document.getElementById('waiting-screen').style.display = 'none';
+      document.getElementById('evaluation-screen').style.display = 'none';
+      document.getElementById('results-screen').style.display = 'none';
+      document.getElementById('final-result').style.display = 'none';
+
+      if (screenId) {
+        document.getElementById(screenId).style.display = 'flex';
+      }
+    }
+
+    // ============ 동전 비 효과 ============
+    function startCoinRain() {
+      const container = document.getElementById('coin-rain');
+      container.style.display = 'block';
+      container.innerHTML = '';
+
+      const coins = ['💰', '💵', '💴', '💶', '💷', '🪙', '💎'];
+
+      for (let i = 0; i < 100; i++) {
+        setTimeout(() => {
+          const coin = document.createElement('div');
+          coin.className = 'coin';
+          coin.textContent = coins[Math.floor(Math.random() * coins.length)];
+          coin.style.left = Math.random() * 100 + '%';
+          coin.style.animationDuration = Math.random() * 2 + 2 + 's';
+          container.appendChild(coin);
+          setTimeout(() => coin.remove(), 4000);
+        }, i * 30);
+      }
+
+      setTimeout(() => container.style.display = 'none', 5000);
+    }
+
+    // ============ 결과 발표 ============
+    function renderRankBars(teams) {
+      rankedTeams = teams;
+      const container = document.getElementById('rank-container');
+      const displayOrder = [3, 2, 1, 0]; // 4위, 3위, 2위, 1위
+
+      container.innerHTML = displayOrder.map((idx) => {
+        const team = teams[idx];
+        const rankNum = idx + 1;
+        let barClass = ['fourth', 'third', 'second', 'first'][3 - idx];
+
+        return `
+          <div class="rank-bar-wrapper" id="rank-wrapper-${rankNum}">
+            <div class="rank-info" id="rank-info-${rankNum}">
+              <div class="rank-position">${rankNum}위</div>
+              <div class="rank-team-name">${team.name}</div>
+              <div class="rank-amount">${team.totalInvestment}억원</div>
+            </div>
+            <div class="rank-bar ${barClass}" id="rank-bar-${rankNum}"
+                 onclick="showFeedback(${team.id}, '${team.name}', ${team.totalInvestment})">
+              <div class="coins-fill"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handlePresentationStep(step, teams) {
+      presentationStep = step;
+      rankedTeams = teams;
+      updateAdminUI();
+
+      // 단계 변경 시 피드백 패널 숨기기
+      hideFeedbackPanel();
+
+      switch(step) {
+        case 1: // 오프닝 - 모든 막대 동시에 4위 높이까지 올라감
+          showScreen('results-screen');
+          renderRankBars(teams);
+          startCoinRain();
+          animateAllBars(teams);
+          break;
+        case 2: // 4위 하이라이트 (1,2,3위는 4위 높이에 머무름)
+          highlightRank(4, teams);
+          break;
+        case 3: // 3위 발표: 먼저 3위 높이까지 상승 후 하이라이트
+          animateToThirdPlace(teams);
+          setTimeout(() => {
+            highlightRank(3, teams);
+          }, 4500); // 4초 애니메이션 + 0.5초 여유
+          break;
+        case 4: // 데드히트: 먼저 2위 높이까지 상승 후 하이라이트
+          animateToSecondPlace(teams);
+          setTimeout(() => {
+            highlightDeadheat(teams);
+          }, 5100); // 4.6초 애니메이션 + 0.5초 여유
+          break;
+        case 5: // 1위만 상승 + 점수 공개
+          revealTopTwoScores(teams);
+          break;
+        case 6: // 1위 하이라이트
+          highlightWinner(teams);
+          break;
+        case 7: // 최종 결과 화면
+          showFinalResult(teams[0], teams[1]);
+          break;
+      }
+    }
+
+    // 모든 막대를 동시에 올리는 함수 (4위 높이까지만)
+    function animateAllBars(teams) {
+      const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
+      const minInvestment = Math.min(...teams.map(t => t.totalInvestment));
+
+      // 4위(최저) 높이까지만 모든 막대 상승
+      const stopHeight = (minInvestment / maxInvestment) * 400;
+      const duration = 9000; // 9초 (더 느리게)
+
+      animateBarsWithJS(stopHeight, duration);
+    }
+
+    // JavaScript로 막대 높이 애니메이션 (카운팅과 동기화)
+    function animateBarsWithJS(targetHeight, duration) {
+      const bars = [];
+      for (let i = 1; i <= 4; i++) {
+        const bar = document.getElementById(`rank-bar-${i}`);
+        if (bar) bars.push(bar);
+      }
+
+      const startTime = performance.now();
+
+      function animate(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // easeOut 효과 (카운팅과 동일)
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+        const currentHeight = easeProgress * targetHeight;
+        bars.forEach(bar => {
+          bar.style.height = currentHeight + 'px';
+        });
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    // 특정 순위 하이라이트 함수
+    function highlightRank(rank, teams) {
+      const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
+
+      // 모든 막대 dimmed 처리
+      for (let i = 1; i <= 4; i++) {
+        const bar = document.getElementById(`rank-bar-${i}`);
+        if (bar) {
+          bar.classList.remove('highlighted');
+          bar.classList.add('dimmed');
+        }
+      }
+
+      // 해당 순위만 하이라이트 + 실제 높이로
+      const bar = document.getElementById(`rank-bar-${rank}`);
+      const info = document.getElementById(`rank-info-${rank}`);
+      const team = teams[rank - 1];
+      if (bar) {
+        bar.classList.remove('dimmed');
+        bar.classList.add('highlighted');
+        bar.style.height = (team.totalInvestment / maxInvestment) * 400 + 'px';
+      }
+      if (info) {
+        setTimeout(() => {
+          info.classList.add('visible', 'revealed');
+        }, 1500);
+      }
+
+      // 4위 발표 시: 4위 정보만 보여주고, 나머지 막대는 현재 높이(4위 높이) 유지
+      if (rank === 4) {
+        // 아무것도 하지 않음 - 이미 4위 높이에 있음
+      } else if (rank === 3) {
+        // 3위 공개 시: 4위 정보도 표시 유지
+        const info4 = document.getElementById('rank-info-4');
+        if (info4) info4.classList.add('visible');
+      }
+    }
+
+    // 3위 발표를 위한 막대 상승 애니메이션 (4위 높이 → 3위 높이)
+    function animateToThirdPlace(teams) {
+      const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
+      const fourthHeight = (teams[3].totalInvestment / maxInvestment) * 400;
+      const thirdHeight = (teams[2].totalInvestment / maxInvestment) * 400;
+      const duration = 4000; // 4초 (1.5배 빠르게)
+
+      // 4위는 dimmed, 1,2,3위는 하이라이트 (상승 중)
+      const bar4 = document.getElementById('rank-bar-4');
+      if (bar4) {
+        bar4.classList.remove('highlighted');
+        bar4.classList.add('dimmed');
+      }
+
+      // 1,2,3위 막대를 3위 높이까지 상승 + 하이라이트
+      const bars = [];
+      for (let i = 1; i <= 3; i++) {
+        const bar = document.getElementById(`rank-bar-${i}`);
+        if (bar) {
+          bar.classList.remove('dimmed');
+          bar.classList.add('highlighted');
+          bars.push(bar);
+        }
+      }
+
+      const startTime = performance.now();
+
+      function animate(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+        const currentHeight = fourthHeight + (thirdHeight - fourthHeight) * easeProgress;
+        bars.forEach(bar => {
+          bar.style.height = currentHeight + 'px';
+        });
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    // 데드히트를 위한 막대 상승 애니메이션 (3위 높이 → 2위 높이)
+    function animateToSecondPlace(teams) {
+      const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
+      const thirdHeight = (teams[2].totalInvestment / maxInvestment) * 400;
+      const secondHeight = (teams[1].totalInvestment / maxInvestment) * 400;
+      const duration = 4600; // 4.6초 (1.3배 빠르게)
+
+      // 3,4위는 dimmed
+      for (let i = 3; i <= 4; i++) {
+        const bar = document.getElementById(`rank-bar-${i}`);
+        if (bar) {
+          bar.classList.remove('highlighted');
+          bar.classList.add('dimmed');
+        }
+      }
+
+      // 1,2위 막대를 2위 높이까지 상승 + 하이라이트 + 정보 숨김
+      const bars = [];
+      for (let i = 1; i <= 2; i++) {
+        const bar = document.getElementById(`rank-bar-${i}`);
+        const info = document.getElementById(`rank-info-${i}`);
+        if (bar) {
+          bar.classList.remove('dimmed');
+          bar.classList.add('highlighted');
+          bars.push(bar);
+        }
+        if (info) {
+          info.classList.remove('visible', 'revealed');
+        }
+      }
+
+      const startTime = performance.now();
+
+      function animate(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+        const currentHeight = thirdHeight + (secondHeight - thirdHeight) * easeProgress;
+        bars.forEach(bar => {
+          bar.style.height = currentHeight + 'px';
+        });
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    // 데드히트 하이라이트 함수
+    function highlightDeadheat(teams) {
+      const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
+
+      // 3,4위는 dimmed + 정보 표시
+      for (let i = 3; i <= 4; i++) {
+        const bar = document.getElementById(`rank-bar-${i}`);
+        const info = document.getElementById(`rank-info-${i}`);
+        if (bar) {
+          bar.classList.remove('highlighted');
+          bar.classList.add('dimmed');
+        }
+        if (info) {
+          info.classList.add('visible');
+        }
+      }
+
+      // 1,2위 하이라이트 + 정보는 아직 숨김 (데드히트 오버레이로 가림)
+      for (let i = 1; i <= 2; i++) {
+        const bar = document.getElementById(`rank-bar-${i}`);
+        const info = document.getElementById(`rank-info-${i}`);
+        if (bar) {
+          bar.classList.remove('dimmed');
+          bar.classList.add('highlighted');
+        }
+        if (info) {
+          info.classList.remove('visible', 'revealed');
+        }
+      }
+
+      // 데드히트 오버레이에 정보 표시 (2위 높이까지 올라온 상태이므로 2위 금액 표시)
+      document.getElementById('deadheat-amount').textContent = `${teams[1].totalInvestment}억원`;
+      document.getElementById('deadheat-team1').textContent = teams[0].name;
+      document.getElementById('deadheat-team2').textContent = teams[1].name;
+
+      // 데드히트 오버레이 표시
+      setTimeout(() => {
+        document.getElementById('deadheat-overlay').style.display = 'flex';
+      }, 2000);
+    }
+
+    // 1위, 2위 점수 각각 공개
+    function revealTopTwoScores(teams) {
+      document.getElementById('deadheat-overlay').style.display = 'none';
+
+      const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
+      const secondHeight = (teams[1].totalInvestment / maxInvestment) * 400;
+      const firstHeight = (teams[0].totalInvestment / maxInvestment) * 400;
+
+      // 3,4위는 dimmed 유지
+      for (let i = 3; i <= 4; i++) {
+        const bar = document.getElementById(`rank-bar-${i}`);
+        const info = document.getElementById(`rank-info-${i}`);
+        if (bar) {
+          bar.classList.remove('highlighted');
+          bar.classList.add('dimmed');
+        }
+        if (info) info.classList.add('visible');
+      }
+
+      const bar1 = document.getElementById('rank-bar-1');
+      const bar2 = document.getElementById('rank-bar-2');
+      const info1 = document.getElementById('rank-info-1');
+      const info2 = document.getElementById('rank-info-2');
+
+      // 2위는 하이라이트 유지 (1위와 함께 비교)
+      bar2.classList.add('highlighted');
+      bar2.classList.remove('dimmed');
+
+      // 1위도 하이라이트
+      bar1.classList.add('highlighted');
+      bar1.classList.remove('dimmed');
+
+      // 1위 막대 상승 애니메이션 (줌인 없이)
+      const duration = 4000;
+      const startTime = performance.now();
+
+      function animate(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+        // 1위 높이 상승
+        const currentHeight = secondHeight + (firstHeight - secondHeight) * easeProgress;
+        bar1.style.height = currentHeight + 'px';
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          // 1위, 2위 정보 표시
+          setTimeout(() => {
+            info1.classList.add('visible', 'revealed');
+            info2.classList.add('visible', 'revealed');
+          }, 500);
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    // 1위 하이라이트
+    function highlightWinner(teams) {
+      const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
+
+      // 1위만 하이라이트, 나머지 dimmed
+      const bar1 = document.getElementById('rank-bar-1');
+      const bar2 = document.getElementById('rank-bar-2');
+
+      bar1.classList.add('highlighted');
+      bar1.classList.remove('dimmed');
+
+      bar2.classList.remove('highlighted');
+      bar2.classList.add('dimmed');
+
+      startCoinRain();
+    }
+
+
+    function showFinalResult(winner, second) {
+      document.getElementById('deadheat-overlay').style.display = 'none';
+
+      const maxInvestment = Math.max(...rankedTeams.map(t => t.totalInvestment));
+      const bar1 = document.getElementById('rank-bar-1');
+      const bar2 = document.getElementById('rank-bar-2');
+      const bar3 = document.getElementById('rank-bar-3');
+      const bar4 = document.getElementById('rank-bar-4');
+      const info1 = document.getElementById('rank-info-1');
+      const info2 = document.getElementById('rank-info-2');
+
+      // 1위만 하이라이트, 나머지는 dimmed
+      bar1.classList.remove('dimmed');
+      bar1.classList.add('highlighted');
+      bar2.classList.remove('highlighted');
+      bar2.classList.add('dimmed');
+      if (bar3) bar3.classList.add('dimmed');
+      if (bar4) bar4.classList.add('dimmed');
+
+      // 실제 높이로 표시
+      bar1.style.height = (winner.totalInvestment / maxInvestment) * 400 + 'px';
+      bar2.style.height = (second.totalInvestment / maxInvestment) * 400 + 'px';
+
+      // 1,2위 정보 표시
+      info1.classList.add('visible', 'revealed');
+      info2.classList.add('visible');
+
+      startCoinRain();
+
+      setTimeout(() => {
+        document.getElementById('winner-name').textContent = winner.name;
+        document.getElementById('winner-amount').textContent = `총 ${winner.totalInvestment}억원 투자 유치!`;
+        document.getElementById('winner-diff').textContent = `2위와의 차이: ${winner.totalInvestment - second.totalInvestment}억원`;
+
+        const feedbackList = document.getElementById('winner-feedback-list');
+        const allFeedbacks = [...(winner.feedbacks || []).slice(0, 3), ...(second.feedbacks || []).slice(0, 2)];
+        feedbackList.innerHTML = allFeedbacks.map(fb => `
+          <div class="winner-feedback-item">
+            <div class="feedback-author">${fb.evaluator}</div>
+            <div class="feedback-content">${fb.content}</div>
+          </div>
+        `).join('');
+
+        document.getElementById('final-result').style.display = 'flex';
+        startCoinRain();
+      }, 4000);
+    }
+
+    let currentFeedbackTeamId = null;
+
+    function showFeedback(teamId, teamName, amount) {
+      const feedbackPanel = document.getElementById('feedback-panel');
+
+      // 같은 막대를 다시 클릭하면 패널 닫기
+      if (currentFeedbackTeamId === teamId && feedbackPanel.classList.contains('show')) {
+        hideFeedbackPanel();
+        return;
+      }
+
+      const team = currentState.teams.find(t => t.id === teamId);
+      if (!team || !team.feedbacks || !team.feedbacks.length) {
+        showToast('피드백이 없습니다');
+        return;
+      }
+
+      currentFeedbackTeamId = teamId;
+      document.getElementById('popup-team-name').textContent = teamName;
+      document.getElementById('popup-amount').textContent = `총 투자 유치: ${amount}억원`;
+      document.getElementById('feedback-list').innerHTML = team.feedbacks.map(fb => `
+        <div class="feedback-item">
+          <div class="feedback-author">${fb.evaluator}</div>
+          <div class="feedback-content">${fb.content}</div>
+        </div>
+      `).join('');
+      feedbackPanel.classList.add('show');
+    }
+
+    function hideFeedbackPanel() {
+      document.getElementById('feedback-panel').classList.remove('show');
+      currentFeedbackTeamId = null;
+    }
+
+    // ============ Socket 이벤트 ============
+    socket.emit('display:join');
+
+    socket.on('state:update', (state) => {
+      currentState = state;
+
+      document.getElementById('connected-count').textContent = state.connectedCount;
+      document.getElementById('eval-count').textContent = state.evaluatedCount;
+      document.getElementById('total-evaluators').textContent = state.totalEvaluators;
+
+      const progress = (state.evaluatedCount / state.totalEvaluators) * 100;
+      document.getElementById('progress-bar').style.width = progress + '%';
+
+      renderTeams(state.teams);
+      updateAdminUI();
+
+      if (state.phase === 'waiting') {
+        showScreen('waiting-screen');
+      } else if (state.phase === 'evaluating') {
+        showScreen('evaluation-screen');
+        renderEvaluationTeams(state.teams);
+      } else if (state.phase === 'results') {
+        showScreen('evaluation-screen');
+      } else if (state.phase === 'presenting') {
+        showScreen('results-screen');
+      }
+    });
+
+    socket.on('evaluator:connected', ({ name, count }) => {
+      showToast(`✅ ${name}님 접속 완료!`);
+      const list = document.getElementById('connection-list');
+      list.innerHTML += `<span class="connection-item">${name}</span>`;
+    });
+
+    socket.on('evaluator:reconnected', ({ name }) => {
+      showToast(`🔄 ${name}님 재접속!`);
+    });
+
+    socket.on('evaluation:completed', ({ name, evaluatedCount, totalEvaluators }) => {
+      showToast(`📝 ${name}님 평가 완료! (${evaluatedCount}/${totalEvaluators})`);
+      const remaining = totalEvaluators - evaluatedCount;
+      document.getElementById('progress-detail').textContent =
+        remaining > 0 ? `${remaining}명 평가 중...` : '모든 평가 완료!';
+    });
+
+    socket.on('evaluation:allComplete', () => {
+      document.getElementById('progress-detail').textContent = '🎉 모든 평가가 완료되었습니다!';
+      document.getElementById('start-presentation-btn').classList.add('show');
+      showToast('모든 평가 완료! 결과 발표를 시작하세요');
+    });
+
+    socket.on('presentation:step', ({ step, rankedTeams: teams }) => {
+      handlePresentationStep(step, teams);
+    });
+
+    socket.on('system:reset', () => {
+      location.reload();
+    });
+
+    // ============ 키보드 단축키 ============
+    document.addEventListener('keydown', (e) => {
+      if (currentState?.phase === 'presenting') {
+        if (e.key === ' ' || e.key === 'ArrowRight' || e.key === 'Enter') {
+          e.preventDefault();
+          nextStep();
+        }
+      }
+    });
+
+    // ============ 초기화 ============
+    createParticles();
+    generateQR();
+  </script>
+</body>
+</html>

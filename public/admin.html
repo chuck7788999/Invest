@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 패널 - kt cloud 투자 평가</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #1a1a2e;
+      min-height: 100vh;
+      color: #fff;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      margin-bottom: 30px;
+      background: linear-gradient(90deg, #ffd700, #ff6b35);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 25px;
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* 상태 패널 */
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .status-item {
+      text-align: center;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+    }
+
+    .status-value {
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: #ffd700;
+    }
+
+    .status-label {
+      font-size: 0.85rem;
+      color: #888;
+      margin-top: 5px;
+    }
+
+    .phase-badge {
+      display: inline-block;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .phase-waiting { background: #3498db; }
+    .phase-evaluating { background: #f39c12; }
+    .phase-results { background: #27ae60; }
+    .phase-presenting { background: #e74c3c; }
+
+    /* 버튼 */
+    .btn {
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #ffd700, #ff6b35);
+      color: #000;
+    }
+
+    .btn-success {
+      background: #27ae60;
+      color: #fff;
+    }
+
+    .btn-danger {
+      background: #e74c3c;
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: #3498db;
+      color: #fff;
+    }
+
+    .btn-warning {
+      background: #f39c12;
+      color: #000;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    /* 평가자 목록 */
+    .evaluator-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .evaluator-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 15px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+
+    .evaluator-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .evaluator-status {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .evaluator-status.connected { background: #27ae60; }
+    .evaluator-status.disconnected { background: #e74c3c; }
+    .evaluator-status.evaluated { background: #3498db; }
+
+    .evaluator-name {
+      font-weight: 500;
+    }
+
+    .evaluator-badge {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 10px;
+      background: rgba(255, 215, 0, 0.2);
+      color: #ffd700;
+    }
+
+    /* 팀 설정 */
+    .team-config {
+      margin-bottom: 15px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+    }
+
+    .team-config-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .team-number {
+      background: linear-gradient(135deg, #ffd700, #ff6b35);
+      color: #000;
+      padding: 4px 12px;
+      border-radius: 15px;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .team-investment {
+      margin-left: auto;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #ffd700;
+    }
+
+    .team-input {
+      width: 100%;
+      padding: 10px;
+      font-size: 0.9rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      margin-top: 8px;
+    }
+
+    /* 발표 컨트롤 */
+    .presentation-control {
+      text-align: center;
+      padding: 30px;
+    }
+
+    .step-indicator {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .step {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      transition: all 0.3s;
+    }
+
+    .step.active {
+      background: linear-gradient(135deg, #ffd700, #ff6b35);
+      color: #000;
+      transform: scale(1.2);
+    }
+
+    .step.done {
+      background: #27ae60;
+    }
+
+    .step-label {
+      font-size: 1.2rem;
+      color: #888;
+      margin-bottom: 20px;
+    }
+
+    .step-description {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #ffd700;
+      margin-bottom: 30px;
+    }
+
+    /* 설정 */
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .setting-label {
+      font-weight: 500;
+    }
+
+    .setting-input {
+      width: 80px;
+      padding: 8px;
+      font-size: 1rem;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+    }
+
+    /* 결과 요약 */
+    .result-item {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .result-rank {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.2rem;
+      margin-right: 15px;
+    }
+
+    .result-rank.rank-1 { background: linear-gradient(135deg, #ffd700, #ff6b35); color: #000; }
+    .result-rank.rank-2 { background: #c0c0c0; color: #000; }
+    .result-rank.rank-3 { background: #cd7f32; color: #000; }
+    .result-rank.rank-4 { background: #4a4a4a; color: #fff; }
+
+    .result-info {
+      flex: 1;
+    }
+
+    .result-team {
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .result-amount {
+      color: #ffd700;
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    /* 키보드 단축키 안내 */
+    .shortcuts {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+    }
+
+    .shortcut-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+    }
+
+    .shortcut-key {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-family: monospace;
+    }
+
+    /* 알림 */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      background: #27ae60;
+      color: #fff;
+      border-radius: 10px;
+      font-weight: 500;
+      animation: slideIn 0.3s ease;
+      z-index: 1000;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎛️ kt cloud 투자 평가 관리자 패널</h1>
+
+    <div class="grid">
+      <!-- 상태 패널 -->
+      <div class="card">
+        <h2 class="card-title">📊 현재 상태</h2>
+        <div class="status-grid">
+          <div class="status-item">
+            <div class="status-value" id="connected-count">0</div>
+            <div class="status-label">접속자</div>
+          </div>
+          <div class="status-item">
+            <div class="status-value" id="evaluated-count">0</div>
+            <div class="status-label">평가 완료</div>
+          </div>
+          <div class="status-item">
+            <div class="status-value" id="total-evaluators">12</div>
+            <div class="status-label">전체 평가자</div>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+          <span class="phase-badge phase-waiting" id="phase-badge">대기 중</span>
+        </div>
+        <div class="btn-group" style="justify-content: center;">
+          <button class="btn btn-success" id="start-btn" onclick="startEvaluation()">
+            ▶️ 평가 시작
+          </button>
+          <button class="btn btn-warning" id="force-close-btn" onclick="forceClose()" style="display:none;">
+            ⚠️ 강제 마감
+          </button>
+          <button class="btn btn-primary" id="start-presentation-btn" onclick="startPresentation()" style="display:none;">
+            🎬 결과 발표 시작
+          </button>
+        </div>
+      </div>
+
+      <!-- 평가자 목록 -->
+      <div class="card">
+        <h2 class="card-title">👥 평가자 목록</h2>
+        <div class="evaluator-list" id="evaluator-list">
+          <div style="text-align: center; color: #888; padding: 40px;">
+            아직 접속한 평가자가 없습니다
+          </div>
+        </div>
+      </div>
+
+      <!-- 팀 설정 -->
+      <div class="card">
+        <h2 class="card-title">🏢 팀 설정</h2>
+        <div id="teams-config">
+          <!-- 동적 생성 -->
+        </div>
+        <button class="btn btn-secondary" onclick="updateTeams()" style="margin-top: 15px;">
+          💾 팀 정보 저장
+        </button>
+      </div>
+
+      <!-- 발표 컨트롤 -->
+      <div class="card" id="presentation-card" style="display: none;">
+        <h2 class="card-title">🎭 발표 컨트롤</h2>
+        <div class="presentation-control">
+          <div class="step-indicator">
+            <div class="step" id="step-1">1</div>
+            <div class="step" id="step-2">2</div>
+            <div class="step" id="step-3">3</div>
+            <div class="step" id="step-4">4</div>
+            <div class="step" id="step-5">5</div>
+            <div class="step" id="step-6">6</div>
+            <div class="step" id="step-7">7</div>
+          </div>
+          <div class="step-label" id="step-label">준비 중...</div>
+          <div class="step-description" id="step-description">발표를 시작해주세요</div>
+          <button class="btn btn-primary btn-lg" id="next-step-btn" onclick="nextStep()">
+            ➡️ 다음 단계
+          </button>
+        </div>
+        <div class="shortcuts">
+          <h3 style="margin-bottom: 10px; font-size: 0.9rem;">⌨️ 키보드 단축키</h3>
+          <div class="shortcut-item">
+            <span>다음 단계</span>
+            <span class="shortcut-key">Space / Enter / →</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 결과 요약 -->
+      <div class="card" id="results-card" style="display: none;">
+        <h2 class="card-title">🏆 최종 결과</h2>
+        <div id="results-list">
+          <!-- 동적 생성 -->
+        </div>
+      </div>
+
+      <!-- 설정 -->
+      <div class="card">
+        <h2 class="card-title">⚙️ 설정</h2>
+        <div class="setting-row">
+          <span class="setting-label">전체 평가자 수</span>
+          <input type="number" class="setting-input" id="evaluator-count-input"
+                 value="12" min="1" max="100" onchange="setEvaluatorCount(this.value)">
+        </div>
+        <div class="btn-group" style="margin-top: 20px;">
+          <button class="btn btn-danger" onclick="resetSystem()">
+            🔄 시스템 리셋
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+    let currentState = null;
+
+    const stepDescriptions = {
+      0: '발표를 시작해주세요',
+      1: '🎉 오프닝 - 모든 막대 상승',
+      2: '4️⃣ 4위 발표',
+      3: '3️⃣ 3위 발표',
+      4: '🔥 1/2위 데드히트',
+      5: '📊 1/2위 점수 공개',
+      6: '👑 1위 하이라이트',
+      7: '🏆 최종 결과'
+    };
+
+    // ============ 초기화 ============
+    socket.emit('admin:join');
+
+    // ============ 상태 업데이트 ============
+    socket.on('state:update', (state) => {
+      currentState = state;
+      updateUI(state);
+    });
+
+    socket.on('admin:evaluators', (evaluators) => {
+      renderEvaluators(evaluators);
+    });
+
+    socket.on('evaluation:allComplete', () => {
+      showNotification('모든 평가가 완료되었습니다!');
+    });
+
+    // ============ UI 업데이트 ============
+    function updateUI(state) {
+      document.getElementById('connected-count').textContent = state.connectedCount;
+      document.getElementById('evaluated-count').textContent = state.evaluatedCount;
+      document.getElementById('total-evaluators').textContent = state.totalEvaluators;
+      document.getElementById('evaluator-count-input').value = state.totalEvaluators;
+
+      // Phase 표시
+      const badge = document.getElementById('phase-badge');
+      badge.className = 'phase-badge';
+      switch(state.phase) {
+        case 'waiting':
+          badge.textContent = '대기 중';
+          badge.classList.add('phase-waiting');
+          break;
+        case 'evaluating':
+          badge.textContent = '평가 진행 중';
+          badge.classList.add('phase-evaluating');
+          break;
+        case 'results':
+          badge.textContent = '집계 완료';
+          badge.classList.add('phase-results');
+          break;
+        case 'presenting':
+          badge.textContent = '결과 발표 중';
+          badge.classList.add('phase-presenting');
+          break;
+      }
+
+      // 버튼 상태
+      document.getElementById('start-btn').style.display = state.phase === 'waiting' ? 'inline-flex' : 'none';
+      document.getElementById('force-close-btn').style.display = state.phase === 'evaluating' ? 'inline-flex' : 'none';
+      document.getElementById('start-presentation-btn').style.display = state.phase === 'results' ? 'inline-flex' : 'none';
+
+      // 발표 컨트롤
+      document.getElementById('presentation-card').style.display = state.phase === 'presenting' ? 'block' : 'none';
+
+      if (state.phase === 'presenting') {
+        updatePresentationStep(state.presentationStep);
+      }
+
+      // 팀 설정 렌더링
+      renderTeamsConfig(state.teams);
+
+      // 결과 표시
+      if (state.phase === 'results' || state.phase === 'presenting') {
+        document.getElementById('results-card').style.display = 'block';
+        renderResults(state.teams);
+      }
+    }
+
+    function renderEvaluators(evaluators) {
+      const list = document.getElementById('evaluator-list');
+      if (evaluators.length === 0) {
+        list.innerHTML = '<div style="text-align: center; color: #888; padding: 40px;">아직 접속한 평가자가 없습니다</div>';
+        return;
+      }
+
+      list.innerHTML = evaluators.map(e => {
+        let statusClass = 'disconnected';
+        let statusText = '오프라인';
+        if (e.evaluated) {
+          statusClass = 'evaluated';
+          statusText = '평가 완료';
+        } else if (e.connected) {
+          statusClass = 'connected';
+          statusText = '접속 중';
+        }
+
+        return `
+          <div class="evaluator-item">
+            <div class="evaluator-info">
+              <div class="evaluator-status ${statusClass}"></div>
+              <span class="evaluator-name">${e.name}</span>
+            </div>
+            <span class="evaluator-badge">${statusText}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTeamsConfig(teams) {
+      const container = document.getElementById('teams-config');
+      container.innerHTML = teams.map(team => `
+        <div class="team-config">
+          <div class="team-config-header">
+            <span class="team-number">${team.name}</span>
+            <span class="team-investment">${team.totalInvestment}억원</span>
+          </div>
+          <input type="text" class="team-input" id="team-name-${team.id}"
+                 value="${team.name}" placeholder="팀 이름">
+          <input type="text" class="team-input" id="team-topic-${team.id}"
+                 value="${team.topic}" placeholder="발표 주제">
+        </div>
+      `).join('');
+    }
+
+    function renderResults(teams) {
+      const sorted = [...teams].sort((a, b) => b.totalInvestment - a.totalInvestment);
+      const list = document.getElementById('results-list');
+      list.innerHTML = sorted.map((team, idx) => `
+        <div class="result-item">
+          <div class="result-rank rank-${idx + 1}">${idx + 1}</div>
+          <div class="result-info">
+            <div class="result-team">${team.name}</div>
+            <div style="font-size: 0.85rem; color: #888;">${team.topic}</div>
+          </div>
+          <div class="result-amount">${team.totalInvestment}억원</div>
+        </div>
+      `).join('');
+    }
+
+    function updatePresentationStep(step) {
+      // 스텝 인디케이터 업데이트
+      for (let i = 1; i <= 7; i++) {
+        const el = document.getElementById(`step-${i}`);
+        el.classList.remove('active', 'done');
+        if (i < step) el.classList.add('done');
+        else if (i === step) el.classList.add('active');
+      }
+
+      document.getElementById('step-label').textContent = `Step ${step} / 7`;
+      document.getElementById('step-description').textContent = stepDescriptions[step];
+      document.getElementById('next-step-btn').disabled = step >= 7;
+    }
+
+    // ============ 액션 ============
+    function startEvaluation() {
+      if (currentState.connectedCount === 0) {
+        alert('접속한 평가자가 없습니다.');
+        return;
+      }
+      socket.emit('admin:startEvaluation');
+      showNotification('평가가 시작되었습니다');
+    }
+
+    function forceClose() {
+      if (confirm('평가를 강제 마감하시겠습니까? 아직 제출하지 않은 평가자의 평가는 반영되지 않습니다.')) {
+        socket.emit('admin:forceClose');
+        showNotification('평가가 강제 마감되었습니다');
+      }
+    }
+
+    function startPresentation() {
+      socket.emit('admin:startPresentation');
+      showNotification('결과 발표를 시작합니다');
+    }
+
+    function nextStep() {
+      socket.emit('admin:nextStep');
+    }
+
+    function setEvaluatorCount(count) {
+      socket.emit('admin:setEvaluatorCount', parseInt(count));
+      showNotification(`평가자 수가 ${count}명으로 설정되었습니다`);
+    }
+
+    function updateTeams() {
+      if (!currentState) return;
+      currentState.teams.forEach(team => {
+        const name = document.getElementById(`team-name-${team.id}`).value;
+        const topic = document.getElementById(`team-topic-${team.id}`).value;
+        socket.emit('admin:updateTeam', { teamId: team.id, name, topic });
+      });
+      showNotification('팀 정보가 저장되었습니다');
+    }
+
+    function resetSystem() {
+      if (confirm('시스템을 리셋하시겠습니까? 모든 데이터가 초기화됩니다.')) {
+        socket.emit('admin:reset');
+        showNotification('시스템이 리셋되었습니다');
+      }
+    }
+
+    function showNotification(message) {
+      const notification = document.createElement('div');
+      notification.className = 'notification';
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      setTimeout(() => notification.remove(), 3000);
+    }
+
+    // ============ 키보드 단축키 ============
+    document.addEventListener('keydown', (e) => {
+      if (currentState?.phase === 'presenting') {
+        if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') {
+          e.preventDefault();
+          nextStep();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
