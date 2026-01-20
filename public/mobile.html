@@ -602,6 +602,39 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+
+    /* 로그아웃 버튼 */
+    .btn-logout {
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      background: transparent;
+      color: #888;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-logout:hover {
+      border-color: rgba(255, 255, 255, 0.4);
+      color: #fff;
+    }
+
+    /* 제출 완료 후 비활성화 */
+    .team-evaluation.disabled {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .team-evaluation.disabled .investment-slider {
+      pointer-events: none;
+    }
+
+    .team-evaluation.disabled .feedback-input {
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -652,6 +685,8 @@
         <div class="user-name" id="display-name"></div>
         <div class="user-status">✅ 접속 완료</div>
       </div>
+
+      <button type="button" class="btn-logout" onclick="logout()">다른 계정으로 로그인</button>
     </div>
 
     <!-- 평가 화면 -->
@@ -707,11 +742,17 @@
 
   <script>
     // ============ 상태 관리 ============
-    const socket = io();
+    const socket = io({
+      transports: ['websocket'],  // 웹소켓만 사용 (폴링 비활성화로 성능 향상)
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000
+    });
     let sessionId = localStorage.getItem('kt_eval_session');
     let evaluatorName = localStorage.getItem('kt_eval_name');
     let currentState = null;
     let evaluations = {};
+    let isSubmitted = false;
 
     // ============ 화면 전환 ============
     function showScreen(screenId) {
@@ -774,12 +815,6 @@
               <input type="range" class="investment-slider" id="slider-${team.id}"
                      min="0" max="10" step="1" value="${savedEval.investment}"
                      oninput="updateInvestment(${team.id}, this.value)">
-              <div class="investment-buttons">
-                ${[0, 3, 5, 7, 10].map(v => `
-                  <button class="investment-btn ${savedEval.investment === v ? 'active' : ''}"
-                          onclick="setInvestment(${team.id}, ${v})">${v}억</button>
-                `).join('')}
-              </div>
             </div>
 
             <div class="feedback-section">
@@ -798,6 +833,7 @@
 
     // ============ 투자금 업데이트 ============
     function updateInvestment(teamId, value) {
+      if (isSubmitted) return;  // 제출 완료 시 차단
       value = parseInt(value);
       evaluations[teamId] = evaluations[teamId] || { investment: 0, feedback: '' };
       evaluations[teamId].investment = value;
@@ -822,6 +858,7 @@
     }
 
     function updateFeedback(teamId, value) {
+      if (isSubmitted) return;  // 제출 완료 시 차단
       evaluations[teamId] = evaluations[teamId] || { investment: 0, feedback: '' };
       evaluations[teamId].feedback = value;
 
@@ -895,7 +932,7 @@
           );
         } else {
           showErrorPopup(
-            '예산 부족',
+            '잔여 예산 발생',
             `총 투자 금액이 <strong style="color:#ffd700">${total}억원</strong>입니다.<br>정확히 <strong>10억원</strong>을 배분해주세요.<br><br><small>${10 - total}억원을 더 배분해주세요.</small>`,
             '💰'
           );
@@ -943,8 +980,13 @@
     }
 
     // ============ 로컬 스토리지 ============
+    let saveTimeout = null;
     function saveToLocalStorage() {
-      localStorage.setItem('kt_eval_data', JSON.stringify(evaluations));
+      // Debounce: 300ms 내 연속 호출 시 마지막만 실행
+      if (saveTimeout) clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        localStorage.setItem('kt_eval_data', JSON.stringify(evaluations));
+      }, 300);
     }
 
     function loadFromLocalStorage() {
@@ -978,6 +1020,7 @@
       document.getElementById('display-name').textContent = evaluatorName;
 
       if (evaluator.evaluated) {
+        isSubmitted = true;
         showCompleteSummary(evaluator.evaluations);
         showScreen('complete-screen');
       } else if (state.phase === 'waiting') {
@@ -1002,11 +1045,13 @@
 
     socket.on('evaluator:submitted', ({ success }) => {
       if (success) {
+        isSubmitted = true;
         const savedData = currentState.teams.map(team => ({
           teamId: team.id,
           teamName: team.name,
           investment: evaluations[team.id]?.investment || 0
         }));
+        disableEvaluationInputs();
         showCompleteSummary(savedData);
         showScreen('complete-screen');
         localStorage.removeItem('kt_eval_data');
@@ -1034,6 +1079,32 @@
           `;
         }).join('');
       }
+    }
+
+    // ============ 로그아웃 ============
+    function logout() {
+      localStorage.removeItem('kt_eval_session');
+      localStorage.removeItem('kt_eval_name');
+      localStorage.removeItem('kt_eval_data');
+      sessionId = null;
+      evaluatorName = null;
+      showScreen('login-screen');
+      document.getElementById('evaluator-name').value = '';
+      document.getElementById('join-btn').innerHTML = '평가 참여하기';
+      document.getElementById('join-btn').disabled = false;
+    }
+
+    // ============ 제출 후 스크롤/입력 비활성화 ============
+    function disableEvaluationInputs() {
+      document.querySelectorAll('.team-evaluation').forEach(el => {
+        el.classList.add('disabled');
+      });
+      document.querySelectorAll('.investment-slider').forEach(el => {
+        el.disabled = true;
+      });
+      document.querySelectorAll('.feedback-input').forEach(el => {
+        el.disabled = true;
+      });
     }
 
     // ============ 초기화 ============

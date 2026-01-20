@@ -145,7 +145,10 @@ io.on('connection', (socket) => {
 
       state.evaluators.set(evalSessionId, evaluator);
       state.connectedCount++;
-      state.totalEvaluators = state.connectedCount; // 접속자 수에 맞게 총 평가자 수 업데이트
+      // totalEvaluators는 connectedCount보다 작으면 동기화
+      if (state.totalEvaluators < state.connectedCount) {
+        state.totalEvaluators = state.connectedCount;
+      }
       sessions.set(evalSessionId, socket.id);
       socketToSession.set(socket.id, evalSessionId);
       socket.join('evaluators');
@@ -299,7 +302,10 @@ io.on('connection', (socket) => {
 
     state.evaluators.set(evalSessionId, evaluator);
     state.connectedCount++;
-    state.totalEvaluators = state.connectedCount; // 접속자 수에 맞게 총 평가자 수 업데이트
+    // totalEvaluators는 connectedCount보다 작으면 동기화
+    if (state.totalEvaluators < state.connectedCount) {
+      state.totalEvaluators = state.connectedCount;
+    }
 
     io.to('display').emit('evaluator:connected', { name, count: state.connectedCount });
     broadcastState();
