@@ -65,7 +65,7 @@ const state = {
   teams: initialTeams,
   presentationOrder: appConfig.presentation.order,
   evaluators: new Map(), // sessionId -> { name, connected, evaluated, evaluations }
-  totalEvaluators: appConfig.presentation.totalEvaluators,
+  totalEvaluators: 0,  // 평가 시작 시 connectedCount로 설정됨
   connectedCount: 0,
   evaluatedCount: 0
 };
@@ -215,8 +215,8 @@ io.on('connection', (socket) => {
 
       state.evaluators.set(evalSessionId, evaluator);
       state.connectedCount++;
-      // totalEvaluators는 connectedCount보다 작으면 동기화
-      if (state.totalEvaluators < state.connectedCount) {
+      // 대기 중에는 totalEvaluators를 connectedCount와 동기화
+      if (state.phase === 'waiting') {
         state.totalEvaluators = state.connectedCount;
       }
       sessions.set(evalSessionId, socket.id);
@@ -383,8 +383,8 @@ io.on('connection', (socket) => {
 
     state.evaluators.set(evalSessionId, evaluator);
     state.connectedCount++;
-    // totalEvaluators는 connectedCount보다 작으면 동기화
-    if (state.totalEvaluators < state.connectedCount) {
+    // 대기 중에는 totalEvaluators를 connectedCount와 동기화
+    if (state.phase === 'waiting') {
       state.totalEvaluators = state.connectedCount;
     }
 
