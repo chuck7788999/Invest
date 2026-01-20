@@ -151,6 +151,82 @@
       color: #fff;
     }
 
+    /* 조 정보 수정 패널 */
+    .team-edit-item {
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .team-name-input,
+    .team-topic-input {
+      width: 100%;
+      padding: 8px;
+      font-size: 0.8rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+    }
+
+    .team-name-input {
+      font-weight: 700;
+    }
+
+    .team-topic-input {
+      font-size: 0.75rem;
+    }
+
+    /* 발표 순서 설정 */
+    .presentation-order-display {
+      background: rgba(255, 215, 0, 0.1);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: #ffd700;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .order-edit-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .order-edit-row span {
+      font-size: 0.8rem;
+      color: #aaa;
+      min-width: 50px;
+    }
+
+    .order-select {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+    }
+
+    .admin-divider {
+      border: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      margin: 15px 0;
+    }
+
+    .edit-panel-hidden {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .edit-panel-save-btn {
+      margin-top: 10px;
+    }
+
     .step-info {
       text-align: center;
       padding: 10px;
@@ -1142,6 +1218,79 @@
       <div class="admin-section">
         <button class="admin-btn danger" onclick="resetSystem()">🔄 전체 리셋</button>
       </div>
+
+      <hr class="admin-divider">
+
+      <!-- 조 정보 수정 -->
+      <div class="admin-section">
+        <div class="admin-label">📝 조 정보 수정</div>
+        <button class="admin-btn secondary" onclick="toggleTeamEdit()">조 이름/토픽 수정</button>
+        <div id="team-edit-panel" class="edit-panel-hidden">
+          <div class="team-edit-item" data-team-id="1">
+            <input type="text" class="team-name-input" id="team-name-1" placeholder="1조 이름">
+            <input type="text" class="team-topic-input" id="team-topic-1" placeholder="1조 토픽">
+          </div>
+          <div class="team-edit-item" data-team-id="2">
+            <input type="text" class="team-name-input" id="team-name-2" placeholder="2조 이름">
+            <input type="text" class="team-topic-input" id="team-topic-2" placeholder="2조 토픽">
+          </div>
+          <div class="team-edit-item" data-team-id="3">
+            <input type="text" class="team-name-input" id="team-name-3" placeholder="3조 이름">
+            <input type="text" class="team-topic-input" id="team-topic-3" placeholder="3조 토픽">
+          </div>
+          <div class="team-edit-item" data-team-id="4">
+            <input type="text" class="team-name-input" id="team-name-4" placeholder="4조 이름">
+            <input type="text" class="team-topic-input" id="team-topic-4" placeholder="4조 토픽">
+          </div>
+          <button type="button" class="admin-btn success edit-panel-save-btn" onclick="saveTeamInfo()">💾 저장</button>
+        </div>
+      </div>
+
+      <!-- 발표 순서 수정 -->
+      <div class="admin-section">
+        <div class="admin-label">🔢 발표 순서 설정</div>
+        <div class="presentation-order-display" id="presentation-order-display">2조 → 4조 → 3조 → 1조</div>
+        <button class="admin-btn secondary" onclick="toggleOrderEdit()">순서 변경</button>
+        <div id="order-edit-panel" class="edit-panel-hidden">
+          <div class="order-edit-row">
+            <span>1번째:</span>
+            <select id="order-1" class="order-select">
+              <option value="1">1조</option>
+              <option value="2" selected>2조</option>
+              <option value="3">3조</option>
+              <option value="4">4조</option>
+            </select>
+          </div>
+          <div class="order-edit-row">
+            <span>2번째:</span>
+            <select id="order-2" class="order-select">
+              <option value="1">1조</option>
+              <option value="2">2조</option>
+              <option value="3">3조</option>
+              <option value="4" selected>4조</option>
+            </select>
+          </div>
+          <div class="order-edit-row">
+            <span>3번째:</span>
+            <select id="order-3" class="order-select">
+              <option value="1">1조</option>
+              <option value="2">2조</option>
+              <option value="3" selected>3조</option>
+              <option value="4">4조</option>
+            </select>
+          </div>
+          <div class="order-edit-row">
+            <span>4번째:</span>
+            <select id="order-4" class="order-select">
+              <option value="1" selected>1조</option>
+              <option value="2">2조</option>
+              <option value="3">3조</option>
+              <option value="4">4조</option>
+            </select>
+          </div>
+          <button type="button" class="admin-btn success edit-panel-save-btn" onclick="saveOrder()">💾 순서 저장</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1325,6 +1474,79 @@
     function resetSystem() {
       if (confirm('전체 시스템을 리셋하시겠습니까?')) {
         socket.emit('admin:reset');
+      }
+    }
+
+    // ============ 조 정보 수정 ============
+    function toggleTeamEdit() {
+      const panel = document.getElementById('team-edit-panel');
+      if (panel.style.display === 'none' || panel.style.display === '') {
+        panel.style.display = 'block';
+        // 현재 데이터 로드
+        if (currentState && currentState.teams) {
+          currentState.teams.forEach(team => {
+            document.getElementById(`team-name-${team.id}`).value = team.name;
+            document.getElementById(`team-topic-${team.id}`).value = team.topic;
+          });
+        }
+      } else {
+        panel.style.display = 'none';
+      }
+    }
+
+    function saveTeamInfo() {
+      for (let i = 1; i <= 4; i++) {
+        const name = document.getElementById(`team-name-${i}`).value.trim();
+        const topic = document.getElementById(`team-topic-${i}`).value.trim();
+        if (name || topic) {
+          socket.emit('admin:updateTeam', { teamId: i, name, topic });
+        }
+      }
+      showToast('✅ 조 정보가 저장되었습니다');
+      document.getElementById('team-edit-panel').style.display = 'none';
+    }
+
+    // ============ 발표 순서 수정 ============
+    let currentPresentationOrder = [2, 4, 3, 1];
+
+    function toggleOrderEdit() {
+      const panel = document.getElementById('order-edit-panel');
+      if (panel.style.display === 'none' || panel.style.display === '') {
+        panel.style.display = 'block';
+        // 현재 순서 로드
+        if (currentState && currentState.presentationOrder) {
+          currentPresentationOrder = currentState.presentationOrder;
+        }
+        for (let i = 1; i <= 4; i++) {
+          document.getElementById(`order-${i}`).value = currentPresentationOrder[i - 1];
+        }
+      } else {
+        panel.style.display = 'none';
+      }
+    }
+
+    function saveOrder() {
+      const order = [];
+      for (let i = 1; i <= 4; i++) {
+        order.push(parseInt(document.getElementById(`order-${i}`).value));
+      }
+      // 중복 체크
+      const unique = new Set(order);
+      if (unique.size !== 4) {
+        showToast('⚠️ 중복된 조가 있습니다. 다시 선택해주세요.');
+        return;
+      }
+      socket.emit('admin:updatePresentationOrder', order);
+      currentPresentationOrder = order;
+      updateOrderDisplay();
+      showToast('✅ 발표 순서가 저장되었습니다');
+      document.getElementById('order-edit-panel').style.display = 'none';
+    }
+
+    function updateOrderDisplay() {
+      const display = document.getElementById('presentation-order-display');
+      if (display && currentPresentationOrder) {
+        display.textContent = currentPresentationOrder.map(id => `${id}조`).join(' → ');
       }
     }
 
@@ -2248,6 +2470,12 @@
 
       const progress = (state.evaluatedCount / state.totalEvaluators) * 100;
       document.getElementById('progress-bar').style.width = progress + '%';
+
+      // 발표 순서 업데이트
+      if (state.presentationOrder) {
+        currentPresentationOrder = state.presentationOrder;
+        updateOrderDisplay();
+      }
 
       renderTeams(state.teams);
       updateAdminUI();

@@ -796,7 +796,14 @@
     // ============ 팀 카드 렌더링 ============
     function renderTeamCards(teams) {
       const container = document.getElementById('teams-container');
-      container.innerHTML = teams.map(team => {
+
+      // 발표 순서에 따라 팀 정렬
+      let orderedTeams = teams;
+      if (currentState && currentState.presentationOrder) {
+        orderedTeams = currentState.presentationOrder.map(id => teams.find(t => t.id === id)).filter(t => t);
+      }
+
+      container.innerHTML = orderedTeams.map(team => {
         const savedEval = evaluations[team.id] || { investment: 0, feedback: '' };
         const feedbackLen = savedEval.feedback.length;
         const counterClass = feedbackLen >= 10 ? 'ok' : 'error';

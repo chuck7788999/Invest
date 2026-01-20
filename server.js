@@ -41,11 +41,12 @@ const state = {
   phase: 'waiting', // waiting, evaluating, results, presenting
   presentationStep: 0, // 0: 대기, 1: 오프닝, 2: 4위, 3: 3위, 4: 1/2위 데드히트, 5: 최종
   teams: [
-    { id: 1, name: '1조', topic: 'AI 기반 클라우드 비용 최적화 솔루션', totalInvestment: 0, feedbacks: [] },
-    { id: 2, name: '2조', topic: '하이브리드 멀티클라우드 통합 관리 플랫폼', totalInvestment: 0, feedbacks: [] },
-    { id: 3, name: '3조', topic: '제로트러스트 보안 아키텍처 구축 방안', totalInvestment: 0, feedbacks: [] },
-    { id: 4, name: '4조', topic: '엣지 컴퓨팅 기반 실시간 데이터 처리', totalInvestment: 0, feedbacks: [] }
+    { id: 1, name: '1조', topic: 'kt cloud 상품문의 여정의 동반자, Journey', totalInvestment: 0, feedbacks: [] },
+    { id: 2, name: '2조', topic: '세일즈 에이전트, Briefy', totalInvestment: 0, feedbacks: [] },
+    { id: 3, name: '3조', topic: '효율화를 위한 Jira 자동화 서비스, Ji-Key-Ra', totalInvestment: 0, feedbacks: [] },
+    { id: 4, name: '4조', topic: '출장품의 프로세스 효율화, TripON', totalInvestment: 0, feedbacks: [] }
   ],
+  presentationOrder: [2, 4, 3, 1], // 발표 순서 (조 ID 순서)
   evaluators: new Map(), // sessionId -> { name, connected, evaluated, evaluations }
   totalEvaluators: 12, // 기본 평가자 수
   connectedCount: 0,
@@ -77,6 +78,7 @@ function getPublicState() {
     phase: state.phase,
     presentationStep: state.presentationStep,
     teams: state.teams,
+    presentationOrder: state.presentationOrder,
     connectedCount: state.connectedCount,
     evaluatedCount: state.evaluatedCount,
     totalEvaluators: state.totalEvaluators
@@ -267,6 +269,15 @@ io.on('connection', (socket) => {
       if (topic) team.topic = topic;
       broadcastState();
       console.log(`[관리자] 조 정보 수정: ${teamId}`);
+    }
+  });
+
+  // 관리자: 발표 순서 수정
+  socket.on('admin:updatePresentationOrder', (order) => {
+    if (Array.isArray(order) && order.length === 4) {
+      state.presentationOrder = order;
+      broadcastState();
+      console.log(`[관리자] 발표 순서 수정: ${order.join(' -> ')}`);
     }
   });
 
