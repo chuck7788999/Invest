@@ -7,26 +7,22 @@
     {
       "id": 1,
       "name": "1조",
-      "topic": "kt cloud 상품문의 여정의 동반자, Journey",
-      "members": ["강찬영", "권현준", "김동현", "박창윤", "이예령"]
+      "topic": "kt cloud 상품문의 여정의 동반자, Journey"
     },
     {
       "id": 2,
       "name": "2조",
-      "topic": "kt cloud와 함께 성장하는 파트너, Partner Growth Hub",
-      "members": ["고은채", "김태민", "박예진", "송우영", "이재원"]
+      "topic": "세일즈 에이전트, Briefy"
     },
     {
       "id": 3,
       "name": "3조",
-      "topic": "AI기반 맞춤형 클라우드 컨설턴트, AICC",
-      "members": ["김민수", "김서연", "김지훈", "유하은", "한지우"]
+      "topic": "효율화를 위한 Jira 자동화 서비스, Ji-Key-Ra"
     },
     {
       "id": 4,
       "name": "4조",
-      "topic": "오류 탈출 넘버원! 트러블 슈팅 챗봇",
-      "members": ["김민준", "박서윤", "이도윤", "장민혁", "허수빈"]
+      "topic": "출장품의 프로세스 효율화, TripON"
     }
   ],
   "presentation": {
