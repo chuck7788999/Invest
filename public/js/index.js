@@ -1,5 +1,10 @@
     // ============ 상태 관리 ============
-    const socket = io();
+    const socket = io({
+      transports: ['polling', 'websocket'],  // 폴링 우선, 웹소켓 업그레이드 (Render 호환)
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000
+    });
     let currentState = null;
     let rankedTeams = [];
     let presentationStep = 0;
