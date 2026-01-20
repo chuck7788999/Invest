@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>코인 스태킹 테스트</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: linear-gradient(180deg, #0a0a1a 0%, #0d1528 50%, #0a1520 100%);
+      min-height: 100vh;
+      color: #fff;
+    }
+
+    .test-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* 컨트롤 패널 */
+    .control-panel {
+      background: rgba(20, 20, 40, 0.9);
+      padding: 20px;
+      border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .control-group label {
+      font-size: 0.8rem;
+      color: #888;
+    }
+
+    .control-group input {
+      padding: 8px 12px;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+      width: 100px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #ffd700, #ffaa00);
+      color: #000;
+    }
+
+    .btn-primary:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #ff5757, #ff3333);
+      color: #fff;
+    }
+
+    .btn-step {
+      background: linear-gradient(135deg, #4da6ff, #0066cc);
+      color: #fff;
+    }
+
+    /* 상태 표시 */
+    .status-panel {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 10px 20px;
+      display: flex;
+      gap: 30px;
+      font-size: 0.85rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .status-item {
+      display: flex;
+      gap: 8px;
+    }
+
+    .status-label {
+      color: #888;
+    }
+
+    .status-value {
+      color: #ffd700;
+      font-weight: 700;
+    }
+
+    /* 코인 스태킹 영역 */
+    .coin-area {
+      flex: 1;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      padding: 40px;
+      gap: 60px;
+    }
+
+    #coin-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .coin-stack-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      width: 180px;
+      position: relative;
+      height: auto;
+      z-index: 1;
+    }
+
+    .rank-info {
+      text-align: center;
+      opacity: 0;
+      transition: all 0.5s ease;
+      z-index: 10;
+      white-space: nowrap;
+      margin-bottom: 15px;
+    }
+
+    .rank-info.visible {
+      opacity: 1;
+    }
+
+    .rank-position {
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: #ffd700;
+    }
+
+    .rank-team-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 8px 0;
+    }
+
+    .rank-amount {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #ff6b35;
+    }
+
+    .coin-stack-area {
+      width: 160px;
+      height: 450px;
+      position: relative;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .coin-stack-area.highlighted {
+      filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8));
+    }
+
+    .coin-stack-area.dimmed {
+      opacity: 0.3;
+      filter: grayscale(70%);
+    }
+
+    .stack-base {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 20px;
+      background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.5), transparent);
+      border-radius: 50%;
+      box-shadow: 0 0 30px 10px rgba(255, 215, 0, 0.3);
+    }
+
+    /* 로그 패널 */
+    .log-panel {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 350px;
+      max-height: 300px;
+      background: rgba(0, 0, 0, 0.9);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .log-header {
+      background: rgba(255, 215, 0, 0.2);
+      padding: 10px 15px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .log-content {
+      padding: 10px;
+      max-height: 240px;
+      overflow-y: auto;
+      font-size: 0.8rem;
+      font-family: monospace;
+    }
+
+    .log-entry {
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .log-entry.info { color: #4da6ff; }
+    .log-entry.success { color: #00ff96; }
+    .log-entry.warning { color: #ffd700; }
+    .log-entry.error { color: #ff5757; }
+
+    /* 단계 표시 */
+    .step-indicator {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .step-badge {
+      padding: 5px 15px;
+      background: rgba(255, 215, 0, 0.2);
+      border: 1px solid rgba(255, 215, 0, 0.5);
+      border-radius: 20px;
+      font-weight: 700;
+      color: #ffd700;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <!-- 컨트롤 패널 -->
+    <div class="control-panel">
+      <div class="control-group">
+        <label>1위 투자금</label>
+        <input type="number" id="invest-1" value="42" min="0" max="100">
+      </div>
+      <div class="control-group">
+        <label>2위 투자금</label>
+        <input type="number" id="invest-2" value="40" min="0" max="100">
+      </div>
+      <div class="control-group">
+        <label>3위 투자금</label>
+        <input type="number" id="invest-3" value="32" min="0" max="100">
+      </div>
+      <div class="control-group">
+        <label>4위 투자금</label>
+        <input type="number" id="invest-4" value="15" min="0" max="100">
+      </div>
+
+      <div class="step-indicator">
+        <span class="step-badge" id="current-step">Step 0</span>
+      </div>
+
+      <button class="btn btn-primary" onclick="startFromBeginning()">처음부터 시작</button>
+      <button class="btn btn-step" onclick="nextStep()">다음 단계</button>
+      <button class="btn btn-danger" onclick="resetAll()">리셋</button>
+      <button class="btn btn-secondary" onclick="toggleLog()">로그 토글</button>
+    </div>
+
+    <!-- 상태 표시 -->
+    <div class="status-panel">
+      <div class="status-item">
+        <span class="status-label">현재 단계:</span>
+        <span class="status-value" id="status-step">0</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">1위 스택:</span>
+        <span class="status-value" id="status-stack-1">0</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">2위 스택:</span>
+        <span class="status-value" id="status-stack-2">0</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">3위 스택:</span>
+        <span class="status-value" id="status-stack-3">0</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">4위 스택:</span>
+        <span class="status-value" id="status-stack-4">0</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">떨어지는 코인:</span>
+        <span class="status-value" id="status-falling">0</span>
+      </div>
+    </div>
+
+    <!-- 코인 스태킹 영역 -->
+    <div class="coin-area" id="coin-area">
+      <canvas id="coin-canvas"></canvas>
+      <!-- 동적으로 생성 -->
+    </div>
+  </div>
+
+  <!-- 로그 패널 -->
+  <div class="log-panel" id="log-panel">
+    <div class="log-header">
+      <span>실행 로그</span>
+      <button class="btn btn-secondary" style="padding: 3px 10px; font-size: 0.75rem;" onclick="clearLog()">Clear</button>
+    </div>
+    <div class="log-content" id="log-content"></div>
+  </div>
+
+  <script>
+    // ============ 설정 ============
+    const COIN_CONFIG = {
+      GRAVITY: 0.6,
+      COIN_RADIUS: 22,
+      COIN_THICKNESS: 5,
+      STACK_WIDTH: 100,
+      MAX_STACK_HEIGHT: 350,
+      DROP_INTERVAL: 60
+    };
+
+    // ============ 상태 변수 ============
+    let fallingCoins = [];
+    let coinStacks = [0, 0, 0, 0];
+    let targetStacks = [0, 0, 0, 0];
+    let stackCenterX = [0, 0, 0, 0];
+    let highlightedRanks = [0, 1, 2, 3];
+    let coinAnimationId = null;
+    let coinCanvas = null;
+    let coinCtx = null;
+    let canvasBaseY = 0;
+    let activeDropIntervals = [];
+    let currentStep = 0;
+
+    // 테스트용 팀 데이터
+    let teams = [];
+
+    // ============ 로깅 ============
+    function log(message, type = 'info') {
+      const logContent = document.getElementById('log-content');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logContent.appendChild(entry);
+      logContent.scrollTop = logContent.scrollHeight;
+      console.log(`[${type}] ${message}`);
+    }
+
+    function clearLog() {
+      document.getElementById('log-content').innerHTML = '';
+    }
+
+    function toggleLog() {
+      const panel = document.getElementById('log-panel');
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // ============ 상태 업데이트 ============
+    function updateStatus() {
+      document.getElementById('status-step').textContent = currentStep;
+      document.getElementById('status-stack-1').textContent = coinStacks[0];
+      document.getElementById('status-stack-2').textContent = coinStacks[1];
+      document.getElementById('status-stack-3').textContent = coinStacks[2];
+      document.getElementById('status-stack-4').textContent = coinStacks[3];
+      document.getElementById('status-falling').textContent = fallingCoins.length;
+      document.getElementById('current-step').textContent = `Step ${currentStep}`;
+    }
+
+    // ============ 초기화 ============
+    function initTeams() {
+      teams = [
+        { id: 1, name: '1조', totalInvestment: parseInt(document.getElementById('invest-1').value) || 42 },
+        { id: 2, name: '2조', totalInvestment: parseInt(document.getElementById('invest-2').value) || 40 },
+        { id: 3, name: '3조', totalInvestment: parseInt(document.getElementById('invest-3').value) || 32 },
+        { id: 4, name: '4조', totalInvestment: parseInt(document.getElementById('invest-4').value) || 15 }
+      ];
+
+      // 투자금 기준 정렬 (1위가 index 0)
+      teams.sort((a, b) => b.totalInvestment - a.totalInvestment);
+      log(`팀 초기화: ${teams.map(t => `${t.name}(${t.totalInvestment}억)`).join(', ')}`, 'info');
+    }
+
+    function initCoinCanvas() {
+      coinCanvas = document.getElementById('coin-canvas');
+      const container = document.getElementById('coin-area');
+      const rect = container.getBoundingClientRect();
+
+      coinCanvas.width = rect.width;
+      coinCanvas.height = rect.height;
+      coinCtx = coinCanvas.getContext('2d');
+      canvasBaseY = coinCanvas.height - 100;
+
+      updateStackPositions();
+      log('캔버스 초기화 완료', 'success');
+    }
+
+    function updateStackPositions() {
+      const container = document.getElementById('coin-area');
+      if (!container) return;
+
+      const containerRect = container.getBoundingClientRect();
+
+      for (let rank = 1; rank <= 4; rank++) {
+        const wrapper = document.getElementById(`stack-wrapper-${rank}`);
+        if (wrapper) {
+          const wrapperRect = wrapper.getBoundingClientRect();
+          const centerX = wrapperRect.left - containerRect.left + wrapperRect.width / 2;
+          stackCenterX[rank - 1] = centerX;
+        }
+      }
+
+      log(`스택 위치: [${stackCenterX.map(x => x.toFixed(0)).join(', ')}]`, 'info');
+    }
+
+    function renderStacks() {
+      const container = document.getElementById('coin-area');
+      const displayOrder = [3, 2, 1, 0]; // 4위, 3위, 2위, 1위 순서
+
+      // 캔버스 제외하고 다시 그리기
+      const canvas = document.getElementById('coin-canvas');
+      container.innerHTML = '';
+      container.appendChild(canvas);
+
+      displayOrder.forEach(rankIdx => {
+        const team = teams[rankIdx];
+        const rankNum = rankIdx + 1;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'coin-stack-wrapper';
+        wrapper.id = `stack-wrapper-${rankNum}`;
+        wrapper.innerHTML = `
+          <div class="rank-info" id="rank-info-${rankNum}">
+            <div class="rank-position">${rankNum}위</div>
+            <div class="rank-team-name">${team.name}</div>
+            <div class="rank-amount">${team.totalInvestment}억원</div>
+          </div>
+          <div class="coin-stack-area" id="stack-area-${rankNum}">
+            <div class="stack-base"></div>
+          </div>
+        `;
+        container.appendChild(wrapper);
+      });
+
+      setTimeout(() => {
+        initCoinCanvas();
+      }, 100);
+    }
+
+    // ============ 코인 그리기 ============
+    function drawCoin(ctx, x, y, rotation) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+
+      const radius = COIN_CONFIG.COIN_RADIUS;
+      const grad = ctx.createLinearGradient(-radius, -radius, radius, radius);
+      grad.addColorStop(0, '#FFD700');
+      grad.addColorStop(0.3, '#FFF8DC');
+      grad.addColorStop(0.5, '#FFD700');
+      grad.addColorStop(0.7, '#B8860B');
+      grad.addColorStop(1, '#DAA520');
+
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(255, 215, 0, 0.5)';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(0, 0, radius * 0.75, 0, Math.PI * 2);
+      ctx.strokeStyle = '#B8860B';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#8B6914';
+      ctx.font = `bold ${radius * 0.9}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('₩', 0, 2);
+
+      ctx.restore();
+    }
+
+    function drawCoinStack(ctx, x, stackHeight, rankIndex) {
+      const coinHeight = COIN_CONFIG.COIN_THICKNESS;
+      const ellipseWidth = 55;
+      const ellipseHeight = coinHeight * 1.8;
+
+      const isHighlighted = highlightedRanks.includes(rankIndex);
+      const opacity = isHighlighted ? 1.0 : 0.25;
+
+      ctx.save();
+      ctx.globalAlpha = opacity;
+
+      const goldColor = isHighlighted ? '#FFD700' : '#888877';
+      const midColor = isHighlighted ? '#FFC125' : '#777766';
+      const darkColor = isHighlighted ? '#B8860B' : '#555544';
+
+      for (let i = 0; i < stackHeight; i++) {
+        const y = canvasBaseY - (i * coinHeight);
+
+        const grad = ctx.createLinearGradient(x - ellipseWidth, y - coinHeight, x + ellipseWidth, y);
+        grad.addColorStop(0, goldColor);
+        grad.addColorStop(0.5, midColor);
+        grad.addColorStop(1, darkColor);
+
+        ctx.beginPath();
+        ctx.ellipse(x, y, ellipseWidth, ellipseHeight, 0, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.ellipse(x, y - 1, ellipseWidth * 0.85, coinHeight, 0, 0, Math.PI);
+        ctx.fillStyle = isHighlighted ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.1)';
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    // ============ 애니메이션 ============
+    function animateCoins() {
+      if (!coinCtx || !coinCanvas) return;
+
+      coinCtx.clearRect(0, 0, coinCanvas.width, coinCanvas.height);
+
+      for (let rank = 0; rank < 4; rank++) {
+        if (stackCenterX[rank] && coinStacks[rank] > 0) {
+          drawCoinStack(coinCtx, stackCenterX[rank], coinStacks[rank], rank);
+        }
+      }
+
+      for (let i = fallingCoins.length - 1; i >= 0; i--) {
+        const coin = fallingCoins[i];
+
+        coin.vy += COIN_CONFIG.GRAVITY;
+        coin.y += coin.vy;
+        coin.x += coin.vx;
+        coin.rotation += coin.rotationSpeed;
+
+        const landingY = canvasBaseY - (coinStacks[coin.rankIndex] * COIN_CONFIG.COIN_THICKNESS);
+
+        if (coin.y >= landingY) {
+          coinStacks[coin.rankIndex]++;
+          fallingCoins.splice(i, 1);
+        } else {
+          drawCoin(coinCtx, coin.x, coin.y, coin.rotation);
+        }
+      }
+
+      updateStatus();
+      coinAnimationId = requestAnimationFrame(animateCoins);
+    }
+
+    function startCoinAnimation() {
+      if (!coinAnimationId) {
+        animateCoins();
+      }
+    }
+
+    function stopCoinAnimation() {
+      if (coinAnimationId) {
+        cancelAnimationFrame(coinAnimationId);
+        coinAnimationId = null;
+      }
+      activeDropIntervals.forEach(id => clearInterval(id));
+      activeDropIntervals = [];
+    }
+
+    function dropCoin(rankIndex) {
+      const x = stackCenterX[rankIndex];
+      if (!x) return;
+
+      const coin = {
+        id: Date.now() + Math.random(),
+        x: x + (Math.random() - 0.5) * 30,
+        y: -30,
+        vy: Math.random() * 2 + 1,
+        vx: (Math.random() - 0.5) * 1.5,
+        rotation: 0,
+        rotationSpeed: (Math.random() - 0.5) * 0.2,
+        rankIndex
+      };
+
+      fallingCoins.push(coin);
+    }
+
+    // ============ 코인 쌓기 로직 ============
+
+    // 특정 순위에 떨어지는 중인 코인 수 계산
+    function getFallingCoinsCount(rankIndex) {
+      return fallingCoins.filter(c => c.rankIndex === rankIndex).length;
+    }
+
+    // 특정 순위의 총 코인 수 (착지 + 떨어지는 중)
+    function getTotalCoinsForRank(rankIndex) {
+      return coinStacks[rankIndex] + getFallingCoinsCount(rankIndex);
+    }
+
+    function stackCoinsToHeight(targetHeight, duration, rankIndices, callback) {
+      log(`stackCoinsToHeight: 목표=${targetHeight.toFixed(1)}px, 순위=[${rankIndices.join(',')}]`, 'info');
+
+      const coinsNeeded = Math.floor(targetHeight / COIN_CONFIG.COIN_THICKNESS);
+
+      rankIndices.forEach(rank => {
+        targetStacks[rank] = coinsNeeded;
+      });
+
+      let totalCoinsToAdd = 0;
+      rankIndices.forEach(rank => {
+        const needed = Math.max(0, coinsNeeded - coinStacks[rank]);
+        totalCoinsToAdd += needed;
+      });
+
+      log(`필요 코인: ${totalCoinsToAdd}개, 현재 스택: [${coinStacks.join(',')}]`, 'info');
+
+      if (totalCoinsToAdd === 0) {
+        log('이미 목표 도달', 'warning');
+        if (callback) setTimeout(callback, 100);
+        return;
+      }
+
+      startCoinAnimation();
+
+      const dropInterval = Math.max(30, duration / totalCoinsToAdd);
+      let addedCount = 0;
+
+      const intervalId = setInterval(() => {
+        // 떨어지는 코인까지 포함한 총 코인 수로 체크
+        const needMore = rankIndices.filter(rank => getTotalCoinsForRank(rank) < targetStacks[rank]);
+
+        if (needMore.length === 0 || addedCount >= totalCoinsToAdd) {
+          clearInterval(intervalId);
+          const idx = activeDropIntervals.indexOf(intervalId);
+          if (idx > -1) activeDropIntervals.splice(idx, 1);
+
+          waitForCoinsToLand(() => {
+            log(`스택 완료: [${coinStacks.join(',')}]`, 'success');
+            if (callback) callback();
+          });
+          return;
+        }
+
+        // 떨어지는 코인까지 포함해서 가장 적은 스택에 드롭 (균등 분배)
+        const minStack = Math.min(...needMore.map(r => getTotalCoinsForRank(r)));
+        const lowestRanks = needMore.filter(r => getTotalCoinsForRank(r) === minStack);
+        const rankIdx = lowestRanks[Math.floor(Math.random() * lowestRanks.length)];
+        dropCoin(rankIdx);
+        addedCount++;
+      }, dropInterval);
+
+      activeDropIntervals.push(intervalId);
+    }
+
+    function waitForCoinsToLand(callback) {
+      const checkInterval = setInterval(() => {
+        if (fallingCoins.length === 0) {
+          clearInterval(checkInterval);
+          if (callback) callback();
+        }
+      }, 50);
+
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        if (callback) callback();
+      }, 2000);
+    }
+
+    function addCoinsToRank(rankIndex, additionalHeight, duration, callback) {
+      const additionalCoins = Math.floor(additionalHeight / COIN_CONFIG.COIN_THICKNESS);
+      const newTarget = coinStacks[rankIndex] + additionalCoins;
+      targetStacks[rankIndex] = newTarget;
+
+      log(`addCoinsToRank: 순위=${rankIndex}, 추가=${additionalCoins}개`, 'info');
+
+      if (additionalCoins <= 0) {
+        if (callback) setTimeout(callback, 100);
+        return;
+      }
+
+      startCoinAnimation();
+
+      const dropInterval = Math.max(40, duration / additionalCoins);
+      let addedCount = 0;
+
+      const intervalId = setInterval(() => {
+        if (coinStacks[rankIndex] >= targetStacks[rankIndex] || addedCount >= additionalCoins) {
+          clearInterval(intervalId);
+          const idx = activeDropIntervals.indexOf(intervalId);
+          if (idx > -1) activeDropIntervals.splice(idx, 1);
+
+          setTimeout(() => {
+            log(`1위 추가 완료: ${coinStacks[0]}개`, 'success');
+            if (callback) callback();
+          }, 600);
+          return;
+        }
+
+        dropCoin(rankIndex);
+        addedCount++;
+      }, dropInterval);
+
+      activeDropIntervals.push(intervalId);
+    }
+
+    // ============ 하이라이트 ============
+    function highlightStack(rank) {
+      for (let i = 1; i <= 4; i++) {
+        const area = document.getElementById(`stack-area-${i}`);
+        if (area) {
+          area.classList.remove('highlighted');
+          area.classList.add('dimmed');
+        }
+      }
+
+      const area = document.getElementById(`stack-area-${rank}`);
+      const info = document.getElementById(`rank-info-${rank}`);
+
+      if (area) {
+        area.classList.remove('dimmed');
+        area.classList.add('highlighted');
+      }
+
+      if (info) {
+        setTimeout(() => {
+          info.classList.add('visible');
+        }, 500);
+      }
+    }
+
+    // ============ 단계별 실행 ============
+    function startFromBeginning() {
+      resetAll();
+      setTimeout(() => {
+        initTeams();
+        renderStacks();
+        setTimeout(() => {
+          currentStep = 0;
+          nextStep();
+        }, 200);
+      }, 100);
+    }
+
+    function nextStep() {
+      currentStep++;
+      const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
+
+      log(`========== Step ${currentStep} ==========`, 'warning');
+
+      switch (currentStep) {
+        case 1:
+          log('Step 1: 오프닝 - 모든 코인이 4위 높이까지', 'info');
+          highlightedRanks = [0, 1, 2, 3];
+
+          const fourthHeight = (teams[3].totalInvestment / maxInvestment) * COIN_CONFIG.MAX_STACK_HEIGHT;
+          log(`4위 높이: ${fourthHeight.toFixed(1)}px`, 'info');
+
+          stackCoinsToHeight(fourthHeight, 5000, [0, 1, 2, 3], () => {
+            log('Step 1 완료 - 모든 스택 동일 높이', 'success');
+          });
+          break;
+
+        case 2:
+          log('Step 2: 4위 하이라이트', 'info');
+          highlightedRanks = [3];
+          highlightStack(4);
+          log('4위 공개 완료', 'success');
+          break;
+
+        case 3:
+          log('Step 3: 1,2,3위가 3위 높이까지', 'info');
+          highlightedRanks = [0, 1, 2];
+
+          // DOM 하이라이트
+          for (let i = 1; i <= 3; i++) {
+            const area = document.getElementById(`stack-area-${i}`);
+            if (area) {
+              area.classList.remove('dimmed');
+              area.classList.add('highlighted');
+            }
+          }
+          document.getElementById('stack-area-4').classList.add('dimmed');
+
+          const thirdHeight = (teams[2].totalInvestment / maxInvestment) * COIN_CONFIG.MAX_STACK_HEIGHT;
+          log(`3위 높이: ${thirdHeight.toFixed(1)}px`, 'info');
+
+          stackCoinsToHeight(thirdHeight, 4000, [0, 1, 2], () => {
+            highlightedRanks = [2];
+            highlightStack(3);
+            document.getElementById('rank-info-4').classList.add('visible');
+            log('Step 3 완료 - 3위 공개', 'success');
+          });
+          break;
+
+        case 4:
+          log('Step 4: 데드히트 - 1,2위가 2위 높이까지', 'info');
+          highlightedRanks = [0, 1];
+
+          // DOM 하이라이트
+          for (let i = 1; i <= 2; i++) {
+            const area = document.getElementById(`stack-area-${i}`);
+            if (area) {
+              area.classList.remove('dimmed');
+              area.classList.add('highlighted');
+            }
+          }
+          for (let i = 3; i <= 4; i++) {
+            document.getElementById(`stack-area-${i}`).classList.add('dimmed');
+          }
+
+          const secondHeight = (teams[1].totalInvestment / maxInvestment) * COIN_CONFIG.MAX_STACK_HEIGHT;
+          log(`2위 높이: ${secondHeight.toFixed(1)}px`, 'info');
+
+          stackCoinsToHeight(secondHeight, 4000, [0, 1], () => {
+            log('Step 4 완료 - 데드히트 상황', 'success');
+          });
+          break;
+
+        case 5:
+          log('Step 5: 1위만 코인 추가', 'info');
+          highlightedRanks = [0];
+
+          document.getElementById('stack-area-1').classList.add('highlighted');
+          document.getElementById('stack-area-1').classList.remove('dimmed');
+          document.getElementById('stack-area-2').classList.add('dimmed');
+          document.getElementById('stack-area-2').classList.remove('highlighted');
+
+          const firstHeight = (teams[0].totalInvestment / maxInvestment) * COIN_CONFIG.MAX_STACK_HEIGHT;
+          const currentSecondHeight = (teams[1].totalInvestment / maxInvestment) * COIN_CONFIG.MAX_STACK_HEIGHT;
+          const additionalHeight = firstHeight - currentSecondHeight;
+
+          log(`1위 추가 높이: ${additionalHeight.toFixed(1)}px`, 'info');
+
+          addCoinsToRank(0, additionalHeight, 3000, () => {
+            document.getElementById('rank-info-1').classList.add('visible');
+            document.getElementById('rank-info-2').classList.add('visible');
+            log('Step 5 완료 - 1위, 2위 공개', 'success');
+          });
+          break;
+
+        case 6:
+          log('Step 6: 1위 최종 하이라이트', 'info');
+          highlightedRanks = [0];
+          highlightStack(1);
+          log('최종 결과 표시 완료!', 'success');
+          break;
+
+        default:
+          log('모든 단계 완료!', 'success');
+          currentStep = 0;
+      }
+
+      updateStatus();
+    }
+
+    function resetAll() {
+      stopCoinAnimation();
+      fallingCoins = [];
+      coinStacks = [0, 0, 0, 0];
+      targetStacks = [0, 0, 0, 0];
+      highlightedRanks = [0, 1, 2, 3];
+      currentStep = 0;
+
+      if (coinCtx && coinCanvas) {
+        coinCtx.clearRect(0, 0, coinCanvas.width, coinCanvas.height);
+      }
+
+      // DOM 리셋
+      for (let i = 1; i <= 4; i++) {
+        const area = document.getElementById(`stack-area-${i}`);
+        const info = document.getElementById(`rank-info-${i}`);
+        if (area) {
+          area.classList.remove('highlighted', 'dimmed');
+        }
+        if (info) {
+          info.classList.remove('visible');
+        }
+      }
+
+      updateStatus();
+      log('리셋 완료', 'warning');
+    }
+
+    // ============ 초기화 ============
+    window.addEventListener('load', () => {
+      initTeams();
+      renderStacks();
+      log('테스트 페이지 로드 완료', 'success');
+      log('투자금을 수정하고 "처음부터 시작" 버튼을 클릭하세요', 'info');
+    });
+
+    window.addEventListener('resize', () => {
+      if (coinCanvas) {
+        const container = document.getElementById('coin-area');
+        const rect = container.getBoundingClientRect();
+        coinCanvas.width = rect.width;
+        coinCanvas.height = rect.height;
+        canvasBaseY = coinCanvas.height - 100;
+        updateStackPositions();
+      }
+    });
+  </script>
+</body>
+</html>

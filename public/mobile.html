@@ -434,6 +434,158 @@
       font-size: 0.9rem;
     }
 
+    /* 에러 팝업 */
+    .error-popup-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .error-popup {
+      background: linear-gradient(135deg, #1a1a3a 0%, #2a2a4a 100%);
+      border: 1px solid rgba(255, 87, 87, 0.5);
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 90%;
+      width: 350px;
+      text-align: center;
+      animation: popupIn 0.3s ease;
+    }
+
+    @keyframes popupIn {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .error-popup-icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+    }
+
+    .error-popup-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #ff5757;
+      margin-bottom: 10px;
+    }
+
+    .error-popup-message {
+      font-size: 1rem;
+      color: #ccc;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .error-popup-btn {
+      padding: 12px 40px;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #ff5757, #ff3333);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    /* 예산 가이드 */
+    .budget-guide {
+      background: rgba(255, 215, 0, 0.1);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .budget-guide-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #ffd700;
+      margin-bottom: 8px;
+    }
+
+    .budget-guide-text {
+      font-size: 0.85rem;
+      color: #aaa;
+      line-height: 1.4;
+    }
+
+    /* 예산 상태 표시 */
+    .total-investment.budget-ok {
+      border: 2px solid rgba(0, 255, 150, 0.5);
+      background: rgba(0, 255, 150, 0.1);
+    }
+
+    .total-investment.budget-ok .total-value {
+      color: #00ff96;
+    }
+
+    .total-investment.budget-over {
+      border: 2px solid rgba(255, 87, 87, 0.5);
+      background: rgba(255, 87, 87, 0.1);
+    }
+
+    .total-investment.budget-over .total-value {
+      color: #ff5757;
+    }
+
+    .budget-status {
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+
+    .budget-status.ok {
+      color: #00ff96;
+    }
+
+    .budget-status.over {
+      color: #ff5757;
+    }
+
+    .budget-status.under {
+      color: #ffd700;
+    }
+
+    /* 피드백 에러 상태 */
+    .feedback-input.error {
+      border-color: rgba(255, 87, 87, 0.7);
+    }
+
+    .feedback-error {
+      color: #ff5757;
+      font-size: 0.75rem;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .feedback-counter {
+      font-size: 0.75rem;
+      color: #666;
+      text-align: right;
+      margin-top: 5px;
+    }
+
+    .feedback-counter.ok {
+      color: #00ff96;
+    }
+
+    .feedback-counter.error {
+      color: #ff5757;
+    }
+
     /* 로딩 */
     .loading {
       display: inline-block;
@@ -453,6 +605,16 @@
   </style>
 </head>
 <body>
+  <!-- 에러 팝업 -->
+  <div class="error-popup-overlay" id="error-popup-overlay" onclick="closeErrorPopup(event)">
+    <div class="error-popup">
+      <div class="error-popup-icon" id="error-popup-icon">⚠️</div>
+      <div class="error-popup-title" id="error-popup-title">제출 불가</div>
+      <div class="error-popup-message" id="error-popup-message">오류 메시지</div>
+      <button class="error-popup-btn" onclick="closeErrorPopup()">확인</button>
+    </div>
+  </div>
+
   <div class="container">
     <!-- 헤더 -->
     <header class="header">
@@ -494,6 +656,15 @@
 
     <!-- 평가 화면 -->
     <div id="evaluation-screen">
+      <!-- 예산 가이드 -->
+      <div class="budget-guide">
+        <div class="budget-guide-title">💰 투자 안내</div>
+        <div class="budget-guide-text">
+          총 <strong style="color:#ffd700">10억원</strong>을 4개 팀에 배분해주세요.<br>
+          각 팀에 대한 <strong style="color:#ffd700">10자 이상</strong>의 피드백은 필수입니다.
+        </div>
+      </div>
+
       <div class="eval-progress">
         <div class="eval-progress-text">
           각 팀에 투자할 금액을 결정해주세요 (0~10억)
@@ -508,9 +679,10 @@
       </div>
 
       <div class="submit-section">
-        <div class="total-investment">
-          <div class="total-label">총 투자 금액</div>
-          <div class="total-value"><span id="total-amount">0</span>억원</div>
+        <div class="total-investment" id="total-investment-box">
+          <div class="total-label">총 투자 금액 (정확히 10억원 필요)</div>
+          <div class="total-value"><span id="total-amount">0</span>억원 / 10억원</div>
+          <div class="budget-status" id="budget-status"></div>
         </div>
         <button class="btn-primary" id="submit-btn" onclick="submitEvaluation()">
           평가 제출하기
@@ -585,6 +757,8 @@
       const container = document.getElementById('teams-container');
       container.innerHTML = teams.map(team => {
         const savedEval = evaluations[team.id] || { investment: 0, feedback: '' };
+        const feedbackLen = savedEval.feedback.length;
+        const counterClass = feedbackLen >= 10 ? 'ok' : 'error';
         return `
           <div class="team-evaluation" id="team-${team.id}">
             <div class="team-header">
@@ -609,10 +783,11 @@
             </div>
 
             <div class="feedback-section">
-              <div class="feedback-label">💬 한줄 피드백 (선택)</div>
-              <textarea class="feedback-input" id="feedback-${team.id}"
-                        placeholder="이 팀에 대한 의견을 남겨주세요"
+              <div class="feedback-label">💬 한줄 피드백 (필수, 10자 이상)</div>
+              <textarea class="feedback-input ${feedbackLen < 10 && feedbackLen > 0 ? 'error' : ''}" id="feedback-${team.id}"
+                        placeholder="이 팀에 대한 의견을 10자 이상 남겨주세요"
                         oninput="updateFeedback(${team.id}, this.value)">${savedEval.feedback}</textarea>
+              <div class="feedback-counter ${counterClass}" id="feedback-counter-${team.id}">${feedbackLen}/10자</div>
             </div>
           </div>
         `;
@@ -649,6 +824,16 @@
     function updateFeedback(teamId, value) {
       evaluations[teamId] = evaluations[teamId] || { investment: 0, feedback: '' };
       evaluations[teamId].feedback = value;
+
+      // 글자 수 카운터 업데이트
+      const counter = document.getElementById(`feedback-counter-${teamId}`);
+      const textarea = document.getElementById(`feedback-${teamId}`);
+      const len = value.length;
+
+      counter.textContent = `${len}/10자`;
+      counter.className = 'feedback-counter ' + (len >= 10 ? 'ok' : 'error');
+      textarea.className = 'feedback-input ' + (len > 0 && len < 10 ? 'error' : '');
+
       saveToLocalStorage();
     }
 
@@ -656,14 +841,94 @@
       const total = Object.values(evaluations).reduce((sum, e) => sum + (e.investment || 0), 0);
       document.getElementById('total-amount').textContent = total;
 
+      // 예산 상태 표시
+      const box = document.getElementById('total-investment-box');
+      const statusEl = document.getElementById('budget-status');
+
+      box.classList.remove('budget-ok', 'budget-over');
+      statusEl.className = 'budget-status';
+
+      if (total === 10) {
+        box.classList.add('budget-ok');
+        statusEl.className = 'budget-status ok';
+        statusEl.textContent = '✅ 예산 배분 완료!';
+      } else if (total > 10) {
+        box.classList.add('budget-over');
+        statusEl.className = 'budget-status over';
+        statusEl.textContent = `❌ 예산 초과! (${total - 10}억원 초과)`;
+      } else {
+        statusEl.className = 'budget-status under';
+        statusEl.textContent = `💡 ${10 - total}억원 더 배분하세요`;
+      }
+
       // 진행 상황 표시
       const filledCount = Object.values(evaluations).filter(e => e.investment > 0).length;
       const progress = (filledCount / 4) * 100;
       document.getElementById('eval-progress-fill').style.width = progress + '%';
     }
 
+    // ============ 에러 팝업 ============
+    function showErrorPopup(title, message, icon = '⚠️') {
+      document.getElementById('error-popup-icon').textContent = icon;
+      document.getElementById('error-popup-title').textContent = title;
+      document.getElementById('error-popup-message').innerHTML = message;
+      document.getElementById('error-popup-overlay').style.display = 'flex';
+    }
+
+    function closeErrorPopup(event) {
+      if (event && event.target !== event.currentTarget) return;
+      document.getElementById('error-popup-overlay').style.display = 'none';
+    }
+
     // ============ 제출 ============
     function submitEvaluation() {
+      // 유효성 검사
+      const total = Object.values(evaluations).reduce((sum, e) => sum + (e.investment || 0), 0);
+
+      // 1. 예산이 정확히 10억인지 확인
+      if (total !== 10) {
+        if (total > 10) {
+          showErrorPopup(
+            '예산 초과',
+            `총 투자 금액이 <strong style="color:#ff5757">${total}억원</strong>입니다.<br>정확히 <strong>10억원</strong>을 배분해주세요.<br><br><small>${total - 10}억원을 줄여주세요.</small>`,
+            '💸'
+          );
+        } else {
+          showErrorPopup(
+            '예산 부족',
+            `총 투자 금액이 <strong style="color:#ffd700">${total}억원</strong>입니다.<br>정확히 <strong>10억원</strong>을 배분해주세요.<br><br><small>${10 - total}억원을 더 배분해주세요.</small>`,
+            '💰'
+          );
+        }
+        return;
+      }
+
+      // 2. 모든 팀에 피드백이 10자 이상인지 확인
+      const missingFeedbacks = [];
+      currentState.teams.forEach(team => {
+        const feedback = evaluations[team.id]?.feedback || '';
+        if (feedback.length < 10) {
+          missingFeedbacks.push({
+            name: team.name,
+            length: feedback.length
+          });
+        }
+      });
+
+      if (missingFeedbacks.length > 0) {
+        const feedbackList = missingFeedbacks.map(t =>
+          `<strong>${t.name}</strong>: ${t.length}자 (${10 - t.length}자 부족)`
+        ).join('<br>');
+
+        showErrorPopup(
+          '피드백 부족',
+          `모든 팀에 10자 이상의 피드백을 작성해주세요.<br><br>${feedbackList}`,
+          '✏️'
+        );
+        return;
+      }
+
+      // 제출 데이터 생성
       const submitData = currentState.teams.map(team => ({
         teamId: team.id,
         investment: evaluations[team.id]?.investment || 0,

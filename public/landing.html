@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Architect Investment Day</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: linear-gradient(180deg, #0a0a1a 0%, #0d1528 50%, #0a1520 100%);
+      min-height: 100vh;
+      color: #fff;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 배경 그라데이션 효과 */
+    .bg-gradient {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(0, 100, 200, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(0, 150, 255, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* 메인 컨테이너 */
+    .landing-container {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+    }
+
+    /* 서브 타이틀 */
+    .sub-title {
+      font-size: 1.3rem;
+      font-weight: 400;
+      letter-spacing: 0.5em;
+      color: rgba(255, 255, 255, 0.7);
+      text-transform: uppercase;
+    }
+
+    /* 메인 타이틀 */
+    .main-title {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .title-line {
+      font-size: 5rem;
+      font-weight: 900;
+      font-style: italic;
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+
+    .title-line .white {
+      color: #fff;
+    }
+
+    .title-line .gradient {
+      background: linear-gradient(90deg, #4da6ff, #00d4ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .title-line-2 {
+      font-size: 5.5rem;
+    }
+
+    /* EVENT START 버튼 */
+    .event-start-btn {
+      margin-top: 60px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 25px 60px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, #1a5a9e 0%, #0d8b9f 50%, #0a6b7a 100%);
+      border: none;
+      border-radius: 60px;
+      cursor: pointer;
+      box-shadow: 0 10px 40px rgba(0, 150, 200, 0.3);
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .event-start-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 15px 50px rgba(0, 150, 200, 0.5);
+    }
+
+    .event-start-btn .play-icon {
+      width: 0;
+      height: 0;
+      border-left: 18px solid #fff;
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+    }
+
+    /* 파티클 효과 */
+    .particle {
+      position: absolute;
+      background: rgba(77, 166, 255, 0.5);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: floatParticle 20s infinite ease-in-out;
+    }
+
+    @keyframes floatParticle {
+      0%, 100% {
+        transform: translateY(0) translateX(0);
+        opacity: 0.3;
+      }
+      25% {
+        transform: translateY(-50px) translateX(30px);
+        opacity: 0.6;
+      }
+      50% {
+        transform: translateY(-20px) translateX(-20px);
+        opacity: 0.4;
+      }
+      75% {
+        transform: translateY(-80px) translateX(10px);
+        opacity: 0.5;
+      }
+    }
+
+    /* 반응형 */
+    @media (max-width: 1200px) {
+      .title-line {
+        font-size: 4rem;
+      }
+      .title-line-2 {
+        font-size: 4.5rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .sub-title {
+        font-size: 1rem;
+        letter-spacing: 0.3em;
+      }
+      .title-line {
+        font-size: 2.5rem;
+      }
+      .title-line-2 {
+        font-size: 3rem;
+      }
+      .event-start-btn {
+        padding: 20px 40px;
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+
+  <!-- 파티클 컨테이너 -->
+  <div id="particles"></div>
+
+  <div class="landing-container">
+    <div class="sub-title">Next Generation Showcase</div>
+
+    <div class="main-title">
+      <div class="title-line">
+        <span class="white">Business</span> <span class="gradient">Architect</span>
+      </div>
+      <div class="title-line title-line-2">
+        <span class="white">Investment Day</span>
+      </div>
+    </div>
+
+    <button class="event-start-btn" onclick="startEvent()">
+      <span class="play-icon"></span>
+      Event Start
+    </button>
+  </div>
+
+  <script>
+    // 파티클 생성
+    function createParticles() {
+      const container = document.getElementById('particles');
+      for (let i = 0; i < 30; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.width = Math.random() * 8 + 2 + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 20 + 's';
+        particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+        container.appendChild(particle);
+      }
+    }
+
+    // 이벤트 시작
+    function startEvent() {
+      window.location.href = '/main';
+    }
+
+    // 초기화
+    createParticles();
+  </script>
+</body>
+</html>

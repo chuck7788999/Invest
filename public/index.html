@@ -198,6 +198,7 @@
     .header {
       text-align: center;
       margin-bottom: 30px;
+      transition: margin-bottom 0.3s ease;
     }
 
     .logo {
@@ -227,6 +228,12 @@
       font-size: 1.5rem;
       color: #888;
       margin-top: 10px;
+    }
+
+    /* 결과 화면에서 subtitle 숨기기 */
+    #results-screen:not([style*="display: none"]) ~ .header .subtitle,
+    .main-container:has(#results-screen:not([style*="display: none"])) .header .subtitle {
+      display: none;
     }
 
     /* Phase 1: 대기 화면 */
@@ -505,35 +512,42 @@
       100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
     }
 
-    /* 순위 발표 그래프 */
+    /* 순위 발표 - 코인 스태킹 */
     .rank-container {
       display: flex;
       justify-content: center;
       align-items: flex-end;
-      height: 70vh;
-      padding: 40px;
-      gap: 40px;
+      min-height: 0;
+      max-height: calc(100vh - 200px);
+      padding: 20px 40px 40px 40px;
+      gap: 60px;
       flex: 1;
+      position: relative;
+      overflow: hidden;
     }
 
-    .rank-bar-wrapper {
+    .coin-stack-wrapper {
       display: flex;
       flex-direction: column;
       align-items: center;
-      width: 200px;
+      justify-content: flex-end;
+      width: 180px;
+      position: relative;
+      height: auto;
     }
 
     .rank-info {
       text-align: center;
-      margin-bottom: 20px;
       opacity: 0;
-      transform: translateY(20px);
       transition: all 0.5s ease;
+      z-index: 10;
+      white-space: nowrap;
+      margin-bottom: 25px;
+      position: relative;
     }
 
     .rank-info.visible {
       opacity: 1;
-      transform: translateY(0);
     }
 
     .rank-position {
@@ -554,74 +568,139 @@
       color: #ff6b35;
     }
 
-    .rank-bar {
-      width: 150px;
-      background: linear-gradient(180deg, rgba(255, 215, 0, 0.3), rgba(255, 107, 53, 0.3));
-      border-radius: 15px 15px 0 0;
+    /* 코인 스택 영역 */
+    .coin-stack-area {
+      width: 160px;
+      height: 450px;
       position: relative;
-      height: 0;
-      /* transition 제거 - JS 애니메이션 사용 */
-      overflow: hidden;
       cursor: pointer;
+      border-radius: 10px;
+      transition: all 0.3s ease;
     }
 
-    .rank-bar.first { background: linear-gradient(180deg, #ffd700, #ff6b35); }
-    .rank-bar.second { background: linear-gradient(180deg, #c0c0c0, #a0a0a0); }
-    .rank-bar.third { background: linear-gradient(180deg, #cd7f32, #b87333); }
-    .rank-bar.fourth { background: linear-gradient(180deg, #4a4a4a, #3a3a3a); }
-
-    /* 하이라이트 효과 */
-    .rank-bar.highlighted {
-      box-shadow: 0 0 40px rgba(255, 215, 0, 0.9), 0 0 80px rgba(255, 107, 53, 0.5);
-      animation: barPulse 0.5s infinite alternate;
-      transform: scale(1.05);
+    .coin-stack-area.highlighted {
+      filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8));
     }
 
-    /* 비활성 막대 */
-    .rank-bar.dimmed {
+    .coin-stack-area.dimmed {
       opacity: 0.3;
       filter: grayscale(70%);
-      transition: all 1s ease;
+    }
+
+    /* 코인 스택 베이스 (바닥 glow) */
+    .stack-base {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 20px;
+      background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.5), transparent);
+      border-radius: 50%;
+      box-shadow: 0 0 30px 10px rgba(255, 215, 0, 0.3);
+    }
+
+    /* 코인 스택 컨테이너 */
+    .coin-stack {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+    }
+
+    /* 개별 코인 레이어 */
+    .coin-layer {
+      width: 120px;
+      height: 8px;
+      background: linear-gradient(180deg, #FFD700 0%, #DAA520 50%, #B8860B 100%);
+      border-radius: 60px / 4px;
+      position: relative;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      margin-top: -2px;
+    }
+
+    .coin-layer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 10%;
+      width: 80%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      border-radius: 50%;
     }
 
     .rank-info.revealed {
       opacity: 1;
-      transform: translateY(0);
     }
 
-    @keyframes barPulse {
-      0% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.7), 0 0 60px rgba(255, 107, 53, 0.3); }
-      100% { box-shadow: 0 0 60px rgba(255, 215, 0, 1), 0 0 100px rgba(255, 107, 53, 0.7); }
+    @keyframes coinDrop {
+      0% {
+        transform: translateY(-100px) rotate(0deg);
+        opacity: 0;
+      }
+      20% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(0) rotate(720deg);
+        opacity: 1;
+      }
     }
 
-    .coins-fill {
+    /* 코인 캔버스 */
+    #coin-canvas {
       position: absolute;
-      bottom: 0;
+      top: 0;
       left: 0;
-      right: 0;
-      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23ffd700'/%3E%3Ccircle cx='50' cy='50' r='35' fill='%23ffaa00'/%3E%3Ctext x='50' y='60' text-anchor='middle' font-size='30' fill='%23aa7700'%3E₩%3C/text%3E%3C/svg%3E") repeat;
-      background-size: 30px 30px;
+      width: 100%;
       height: 100%;
-      opacity: 0.7;
-      /* 애니메이션 제거 - 막대 높이에 맞춰 자동으로 표시됨 */
+      pointer-events: none;
+      z-index: 15;
     }
 
-    @keyframes coinsRise {
-      0% { transform: translateY(100%); }
-      100% { transform: translateY(0); }
+    /* 결과 화면 레이아웃 조정 */
+    #results-screen {
+      position: relative;
+      background: linear-gradient(180deg, #0a0a1a 0%, #0d1528 50%, #0a1520 100%);
     }
 
-    /* 피드백 패널 (오른쪽 영역) */
+    /* 피드백 팝업 오버레이 */
+    .feedback-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .feedback-overlay.show {
+      display: flex;
+    }
+
+    /* 피드백 팝업 패널 */
     .feedback-panel {
       display: none;
-      width: 400px;
-      height: 100%;
+      width: 500px;
+      max-width: 90vw;
       max-height: 70vh;
-      background: rgba(20, 20, 40, 0.9);
-      border-left: 2px solid rgba(255, 215, 0, 0.3);
-      padding: 30px;
-      overflow-y: auto;
-      animation: slideIn 0.3s ease;
+      background: linear-gradient(180deg, rgba(30, 30, 60, 0.98) 0%, rgba(20, 20, 40, 0.98) 100%);
+      border: 2px solid rgba(255, 215, 0, 0.4);
+      border-radius: 20px;
+      padding: 0;
+      overflow: hidden;
+      animation: popupIn 0.3s ease;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 215, 0, 0.2);
+      cursor: pointer;
     }
 
     .feedback-panel.show {
@@ -629,9 +708,16 @@
       flex-direction: column;
     }
 
-    @keyframes slideIn {
-      0% { opacity: 0; transform: translateX(20px); }
-      100% { opacity: 1; transform: translateX(0); }
+    .feedback-panel-content {
+      padding: 30px;
+      overflow-y: auto;
+      height: 100%;
+      cursor: default;
+    }
+
+    @keyframes popupIn {
+      0% { opacity: 0; transform: scale(0.9); }
+      100% { opacity: 1; transform: scale(1); }
     }
 
     .feedback-header {
@@ -677,6 +763,29 @@
     .feedback-content {
       font-size: 1.1rem;
       line-height: 1.5;
+    }
+
+    .feedback-close {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 24px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .feedback-close:hover {
+      background: rgba(255, 100, 100, 0.3);
+      transform: scale(1.1);
     }
 
     /* 데드히트 효과 */
@@ -783,10 +892,67 @@
       margin-top: 10px;
     }
 
+    .winner-investment-details {
+      margin-top: 30px;
+      padding: 20px 40px;
+      background: rgba(255, 215, 0, 0.1);
+      border-radius: 15px;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      max-width: 800px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .winner-investment-details:hover {
+      background: rgba(255, 215, 0, 0.2);
+      border-color: rgba(255, 215, 0, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
+    }
+
+    .winner-investment-details:active {
+      transform: translateY(0);
+    }
+
+    .winner-investment-title {
+      font-size: 1.3rem;
+      color: #ffd700;
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+
+    .winner-investment-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .winner-investment-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 15px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+    }
+
+    .winner-investment-item .investor-name {
+      font-size: 1rem;
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .winner-investment-item .investment-amount {
+      font-size: 1.1rem;
+      color: #ffd700;
+      font-weight: 700;
+    }
+
     .winner-feedback {
       margin-top: 40px;
-      max-width: 800px;
+      max-width: 1000px;
       text-align: center;
+      padding: 0 40px;
     }
 
     .winner-feedback-title {
@@ -800,13 +966,94 @@
       flex-wrap: wrap;
       gap: 15px;
       justify-content: center;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 10px;
     }
 
     .winner-feedback-item {
       background: rgba(255, 255, 255, 0.05);
       padding: 15px 25px;
       border-radius: 10px;
-      max-width: 350px;
+      max-width: 400px;
+      border-left: 4px solid #ffd700;
+    }
+
+    .winner-feedback-item .feedback-author {
+      font-size: 0.9rem;
+      color: #888;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .winner-feedback-item .feedback-content {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: #fff;
+    }
+
+    /* 마지막 축하 페이지 */
+    .closing-screen {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0a0a2a 100%);
+      z-index: 300;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .closing-screen.show {
+      display: flex;
+    }
+
+    .closing-content {
+      text-align: center;
+      animation: fadeInUp 0.8s ease;
+    }
+
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .closing-icon {
+      font-size: 6rem;
+      margin-bottom: 30px;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+
+    .closing-message {
+      font-size: 3.5rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, #ffd700, #ff6b35, #ffd700);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 2s linear infinite;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .closing-subtitle {
+      font-size: 1.5rem;
+      color: #888;
+      margin-top: 30px;
     }
 
     /* 접속 알림 토스트 */
@@ -946,9 +1193,16 @@
 
     <!-- Phase 2: 결과 발표 화면 -->
     <div id="results-screen">
+      <canvas id="coin-canvas"></canvas>
       <div class="rank-container" id="rank-container"></div>
-      <!-- 피드백 패널 (오른쪽 영역) -->
-      <div class="feedback-panel" id="feedback-panel">
+    </div>
+  </div>
+
+  <!-- 피드백 팝업 오버레이 -->
+  <div class="feedback-overlay" id="feedback-overlay" onclick="hideFeedbackPanel(event)">
+    <div class="feedback-panel" id="feedback-panel" onclick="hideFeedbackPanel(event)">
+      <div class="feedback-panel-content" onclick="event.stopPropagation()">
+        <button class="feedback-close" onclick="hideFeedbackPanel()">&times;</button>
         <div class="feedback-header">
           <div class="feedback-team" id="popup-team-name"></div>
           <div class="feedback-amount" id="popup-amount"></div>
@@ -978,9 +1232,19 @@
     <div class="winner-name" id="winner-name"></div>
     <div class="winner-amount" id="winner-amount"></div>
     <div class="winner-diff" id="winner-diff"></div>
+    <div class="winner-investment-details" id="winner-investment-details" onclick="showClosingScreen()"></div>
     <div class="winner-feedback">
       <div class="winner-feedback-title">💬 임원진 피드백</div>
       <div class="winner-feedback-list" id="winner-feedback-list"></div>
+    </div>
+  </div>
+
+  <!-- 마지막 축하 페이지 -->
+  <div class="closing-screen" id="closing-screen">
+    <div class="closing-content">
+      <div class="closing-icon">🎉</div>
+      <div class="closing-message">신입사원 입문교육<br>모두 고생했습니다.</div>
+      <div class="closing-subtitle">감사합니다</div>
     </div>
   </div>
 
@@ -1143,10 +1407,33 @@
     }
 
     function showScreen(screenId) {
+      // 결과 화면을 벗어날 때 코인 애니메이션 정리
+      const resultsScreen = document.getElementById('results-screen');
+      const header = document.querySelector('.header');
+      
+      if (resultsScreen.style.display !== 'none' && screenId !== 'results-screen') {
+        resetCoinStacks();
+      }
+
       document.getElementById('waiting-screen').style.display = 'none';
       document.getElementById('evaluation-screen').style.display = 'none';
-      document.getElementById('results-screen').style.display = 'none';
+      resultsScreen.style.display = 'none';
       document.getElementById('final-result').style.display = 'none';
+
+      // 결과 화면일 때 헤더 여백 증가 및 subtitle 숨기기
+      if (screenId === 'results-screen') {
+        if (header) {
+          header.style.marginBottom = '40px';
+          const subtitle = header.querySelector('.subtitle');
+          if (subtitle) subtitle.style.display = 'none';
+        }
+      } else {
+        if (header) {
+          header.style.marginBottom = '30px';
+          const subtitle = header.querySelector('.subtitle');
+          if (subtitle) subtitle.style.display = '';
+        }
+      }
 
       if (screenId) {
         document.getElementById(screenId).style.display = 'flex';
@@ -1176,31 +1463,415 @@
       setTimeout(() => container.style.display = 'none', 5000);
     }
 
+    // ============ 코인 스태킹 시스템 (완전 재설계) ============
+    const COIN_CONFIG = {
+      GRAVITY: 0.6,
+      COIN_RADIUS: 22,
+      COIN_THICKNESS: 5,
+      STACK_WIDTH: 100,
+      MAX_STACK_HEIGHT: 350,
+      DROP_INTERVAL: 60
+    };
+
+    // 상태 변수
+    let fallingCoins = [];
+    let coinStacks = [0, 0, 0, 0]; // 각 순위(0=1위, 1=2위, 2=3위, 3=4위)별 쌓인 코인 수
+    let targetStacks = [0, 0, 0, 0]; // 각 순위별 목표 코인 수
+    let stackCenterX = [0, 0, 0, 0]; // 각 순위별 캔버스 X 좌표
+    let highlightedRanks = [0, 1, 2, 3]; // 하이라이트되는 순위 (0=1위, 1=2위, 2=3위, 3=4위)
+    let coinAnimationId = null;
+    let coinCanvas = null;
+    let coinCtx = null;
+    let isAnimating = false;
+    let canvasBaseY = 0; // 캔버스 바닥 Y 좌표
+    let activeDropIntervals = []; // 활성 드롭 인터벌 추적
+
+    // 캔버스 초기화 - DOM 요소 위치 기반
+    function initCoinCanvas() {
+      coinCanvas = document.getElementById('coin-canvas');
+      if (!coinCanvas) return;
+
+      const container = document.getElementById('results-screen');
+      const rect = container.getBoundingClientRect();
+
+      coinCanvas.width = rect.width;
+      coinCanvas.height = rect.height;
+      coinCtx = coinCanvas.getContext('2d');
+
+      // 바닥 Y 위치 (스택 베이스 위치 기준)
+      canvasBaseY = coinCanvas.height - 100;
+
+      // 위치 계산 - DOM 요소 기반
+      updateStackPositions();
+
+      // 리사이즈 시 재계산
+      window.addEventListener('resize', () => {
+        if (coinCanvas && document.getElementById('results-screen').style.display !== 'none') {
+          const newRect = container.getBoundingClientRect();
+          coinCanvas.width = newRect.width;
+          coinCanvas.height = newRect.height;
+          canvasBaseY = coinCanvas.height - 100;
+          updateStackPositions();
+        }
+      });
+    }
+
+    // DOM 요소 기반 스택 위치 업데이트
+    function updateStackPositions() {
+      // rank-container 내의 4개 wrapper 위치 가져오기
+      // 화면 순서: 4위(왼쪽) - 3위 - 2위 - 1위(오른쪽)
+      // 따라서 wrapper 순서: stack-wrapper-4, stack-wrapper-3, stack-wrapper-2, stack-wrapper-1
+      const container = document.getElementById('rank-container');
+      if (!container) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const resultsRect = document.getElementById('results-screen').getBoundingClientRect();
+
+      // 각 순위별 스택 영역 위치 가져오기
+      for (let rank = 1; rank <= 4; rank++) {
+        const wrapper = document.getElementById(`stack-wrapper-${rank}`);
+        if (wrapper) {
+          const wrapperRect = wrapper.getBoundingClientRect();
+          // results-screen 기준 상대 좌표로 변환
+          const centerX = wrapperRect.left - resultsRect.left + wrapperRect.width / 2;
+          // stackCenterX[순위-1] = 해당 순위의 X 좌표
+          stackCenterX[rank - 1] = centerX;
+        }
+      }
+
+      console.log('Stack positions updated:', stackCenterX);
+    }
+
+    // 코인 그리기 (떨어지는 코인)
+    function drawCoin(ctx, x, y, rotation) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+
+      const radius = COIN_CONFIG.COIN_RADIUS;
+
+      // 코인 그라데이션
+      const grad = ctx.createLinearGradient(-radius, -radius, radius, radius);
+      grad.addColorStop(0, '#FFD700');
+      grad.addColorStop(0.3, '#FFF8DC');
+      grad.addColorStop(0.5, '#FFD700');
+      grad.addColorStop(0.7, '#B8860B');
+      grad.addColorStop(1, '#DAA520');
+
+      // 코인 외곽
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(255, 215, 0, 0.5)';
+      ctx.fill();
+
+      // 내부 원
+      ctx.beginPath();
+      ctx.arc(0, 0, radius * 0.75, 0, Math.PI * 2);
+      ctx.strokeStyle = '#B8860B';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // ₩ 심볼
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#8B6914';
+      ctx.font = `bold ${radius * 0.9}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('₩', 0, 2);
+
+      ctx.restore();
+    }
+
+    // 쌓인 코인 스택 그리기 (3D 레이어)
+    function drawCoinStack(ctx, x, stackHeight, rankIndex) {
+      const coinHeight = COIN_CONFIG.COIN_THICKNESS;
+      const ellipseWidth = 55;
+      const ellipseHeight = coinHeight * 1.8;
+
+      // 하이라이트/Dimmed 적용
+      const isHighlighted = highlightedRanks.includes(rankIndex);
+      const opacity = isHighlighted ? 1.0 : 0.25;
+
+      ctx.save();
+      ctx.globalAlpha = opacity;
+
+      // Dimmed 상태일 때 grayscale 효과를 위한 색상 조정
+      const goldColor = isHighlighted ? '#FFD700' : '#888877';
+      const midColor = isHighlighted ? '#FFC125' : '#777766';
+      const darkColor = isHighlighted ? '#B8860B' : '#555544';
+
+      for (let i = 0; i < stackHeight; i++) {
+        const y = canvasBaseY - (i * coinHeight);
+
+        // 코인 레이어 (3D 효과)
+        const grad = ctx.createLinearGradient(x - ellipseWidth, y - coinHeight, x + ellipseWidth, y);
+        grad.addColorStop(0, goldColor);
+        grad.addColorStop(0.5, midColor);
+        grad.addColorStop(1, darkColor);
+
+        ctx.beginPath();
+        ctx.ellipse(x, y, ellipseWidth, ellipseHeight, 0, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // 하이라이트
+        ctx.beginPath();
+        ctx.ellipse(x, y - 1, ellipseWidth * 0.85, coinHeight, 0, 0, Math.PI);
+        ctx.fillStyle = isHighlighted ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.1)';
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    // 코인 애니메이션 루프
+    function animateCoins() {
+      if (!coinCtx || !coinCanvas) return;
+
+      coinCtx.clearRect(0, 0, coinCanvas.width, coinCanvas.height);
+
+      // 쌓인 코인 스택 그리기 (4개 순위)
+      for (let rank = 0; rank < 4; rank++) {
+        if (stackCenterX[rank] && coinStacks[rank] > 0) {
+          drawCoinStack(coinCtx, stackCenterX[rank], coinStacks[rank], rank);
+        }
+      }
+
+      // 떨어지는 코인 업데이트 및 그리기
+      for (let i = fallingCoins.length - 1; i >= 0; i--) {
+        const coin = fallingCoins[i];
+
+        // 물리 업데이트
+        coin.vy += COIN_CONFIG.GRAVITY;
+        coin.y += coin.vy;
+        coin.x += coin.vx;
+        coin.rotation += coin.rotationSpeed;
+
+        // 착지 체크 - 현재 스택 높이 기준
+        const landingY = canvasBaseY - (coinStacks[coin.rankIndex] * COIN_CONFIG.COIN_THICKNESS);
+
+        if (coin.y >= landingY) {
+          // 코인 착지
+          coinStacks[coin.rankIndex]++;
+          fallingCoins.splice(i, 1);
+        } else {
+          // 코인 그리기
+          drawCoin(coinCtx, coin.x, coin.y, coin.rotation);
+        }
+      }
+
+      // 애니메이션 계속 조건
+      coinAnimationId = requestAnimationFrame(animateCoins);
+    }
+
+    // 애니메이션 시작
+    function startCoinAnimation() {
+      if (!coinAnimationId) {
+        isAnimating = true;
+        animateCoins();
+      }
+    }
+
+    // 애니메이션 정지
+    function stopCoinAnimation() {
+      if (coinAnimationId) {
+        cancelAnimationFrame(coinAnimationId);
+        coinAnimationId = null;
+      }
+      isAnimating = false;
+
+      // 모든 활성 인터벌 정리
+      activeDropIntervals.forEach(id => clearInterval(id));
+      activeDropIntervals = [];
+    }
+
+    // 코인 드롭 함수 (rankIndex: 0=1위, 1=2위, 2=3위, 3=4위)
+    function dropCoin(rankIndex) {
+      const x = stackCenterX[rankIndex];
+      if (!x) return;
+
+      const coin = {
+        id: Date.now() + Math.random(),
+        x: x + (Math.random() - 0.5) * 30,
+        y: -30,
+        vy: Math.random() * 2 + 1,
+        vx: (Math.random() - 0.5) * 1.5,
+        rotation: 0,
+        rotationSpeed: (Math.random() - 0.5) * 0.2,
+        rankIndex
+      };
+
+      fallingCoins.push(coin);
+    }
+
+    // 특정 순위에 떨어지는 중인 코인 수 계산
+    function getFallingCoinsCount(rankIndex) {
+      return fallingCoins.filter(c => c.rankIndex === rankIndex).length;
+    }
+
+    // 특정 순위의 총 코인 수 (착지 + 떨어지는 중)
+    function getTotalCoinsForRank(rankIndex) {
+      return coinStacks[rankIndex] + getFallingCoinsCount(rankIndex);
+    }
+
+    // 목표 높이까지 코인 쌓기 (동일 높이 보장 - 점진적 조정)
+    function stackCoinsToHeight(targetHeight, duration, rankIndices, callback) {
+      console.log(`stackCoinsToHeight: targetHeight=${targetHeight}, ranks=${rankIndices}`);
+
+      const coinsNeeded = Math.floor(targetHeight / COIN_CONFIG.COIN_THICKNESS);
+
+      // 목표 설정
+      rankIndices.forEach(rank => {
+        targetStacks[rank] = coinsNeeded;
+      });
+
+      // 각 팀별 필요 코인 수 계산
+      let totalCoinsToAdd = 0;
+      rankIndices.forEach(rank => {
+        const needed = Math.max(0, coinsNeeded - coinStacks[rank]);
+        totalCoinsToAdd += needed;
+      });
+
+      console.log(`Total coins to add: ${totalCoinsToAdd}, current stacks:`, coinStacks);
+
+      if (totalCoinsToAdd === 0) {
+        // 이미 목표에 도달한 경우 - 강제 조정 없이 콜백만 호출
+        if (callback) setTimeout(callback, 100);
+        return;
+      }
+
+      // 애니메이션 시작
+      startCoinAnimation();
+
+      const dropInterval = Math.max(30, duration / totalCoinsToAdd);
+      let addedCount = 0;
+
+      const intervalId = setInterval(() => {
+        // 떨어지는 코인까지 포함한 총 코인 수로 체크
+        const needMore = rankIndices.filter(rank => getTotalCoinsForRank(rank) < targetStacks[rank]);
+
+        if (needMore.length === 0 || addedCount >= totalCoinsToAdd) {
+          clearInterval(intervalId);
+          const idx = activeDropIntervals.indexOf(intervalId);
+          if (idx > -1) activeDropIntervals.splice(idx, 1);
+
+          // 모든 떨어지는 코인이 착지할 때까지 대기 후 콜백
+          waitForCoinsToLand(() => {
+            if (callback) callback();
+          });
+          return;
+        }
+
+        // 떨어지는 코인까지 포함해서 가장 적은 스택에 드롭 (균등 분배)
+        const minStack = Math.min(...needMore.map(r => getTotalCoinsForRank(r)));
+        const lowestRanks = needMore.filter(r => getTotalCoinsForRank(r) === minStack);
+        const rankIdx = lowestRanks[Math.floor(Math.random() * lowestRanks.length)];
+        dropCoin(rankIdx);
+        addedCount++;
+      }, dropInterval);
+
+      activeDropIntervals.push(intervalId);
+    }
+
+    // 모든 떨어지는 코인이 착지할 때까지 대기
+    function waitForCoinsToLand(callback) {
+      const checkInterval = setInterval(() => {
+        if (fallingCoins.length === 0) {
+          clearInterval(checkInterval);
+          if (callback) callback();
+        }
+      }, 50);
+
+      // 최대 2초 대기 후 강제 진행
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        if (callback) callback();
+      }, 2000);
+    }
+
+    // 특정 팀만 추가 코인 쌓기
+    function addCoinsToRank(rankIndex, additionalHeight, duration, callback) {
+      const additionalCoins = Math.floor(additionalHeight / COIN_CONFIG.COIN_THICKNESS);
+      const newTarget = coinStacks[rankIndex] + additionalCoins;
+      targetStacks[rankIndex] = newTarget;
+
+      console.log(`addCoinsToRank: rank=${rankIndex}, additionalCoins=${additionalCoins}, newTarget=${newTarget}`);
+
+      if (additionalCoins <= 0) {
+        if (callback) setTimeout(callback, 100);
+        return;
+      }
+
+      startCoinAnimation();
+
+      const dropInterval = Math.max(40, duration / additionalCoins);
+      let addedCount = 0;
+
+      const intervalId = setInterval(() => {
+        if (coinStacks[rankIndex] >= targetStacks[rankIndex] || addedCount >= additionalCoins) {
+          clearInterval(intervalId);
+          const idx = activeDropIntervals.indexOf(intervalId);
+          if (idx > -1) activeDropIntervals.splice(idx, 1);
+
+          setTimeout(() => {
+            if (callback) callback();
+          }, 600);
+          return;
+        }
+
+        dropCoin(rankIndex);
+        addedCount++;
+      }, dropInterval);
+
+      activeDropIntervals.push(intervalId);
+    }
+
+    // 코인 스택 완전 초기화
+    function resetCoinStacks() {
+      stopCoinAnimation();
+      fallingCoins = [];
+      coinStacks = [0, 0, 0, 0];
+      targetStacks = [0, 0, 0, 0];
+
+      if (coinCtx && coinCanvas) {
+        coinCtx.clearRect(0, 0, coinCanvas.width, coinCanvas.height);
+      }
+    }
+
     // ============ 결과 발표 ============
-    function renderRankBars(teams) {
+    function renderCoinStacks(teams) {
       rankedTeams = teams;
       const container = document.getElementById('rank-container');
-      const displayOrder = [3, 2, 1, 0]; // 4위, 3위, 2위, 1위
+      const displayOrder = [3, 2, 1, 0]; // 화면에 4위, 3위, 2위, 1위 순서로 표시
 
-      container.innerHTML = displayOrder.map((idx) => {
-        const team = teams[idx];
-        const rankNum = idx + 1;
-        let barClass = ['fourth', 'third', 'second', 'first'][3 - idx];
+      // 코인 스택 초기화
+      resetCoinStacks();
+
+      container.innerHTML = displayOrder.map((rankIdx, displayIdx) => {
+        const team = teams[rankIdx];
+        const rankNum = rankIdx + 1;
 
         return `
-          <div class="rank-bar-wrapper" id="rank-wrapper-${rankNum}">
+          <div class="coin-stack-wrapper" id="stack-wrapper-${rankNum}">
             <div class="rank-info" id="rank-info-${rankNum}">
               <div class="rank-position">${rankNum}위</div>
               <div class="rank-team-name">${team.name}</div>
               <div class="rank-amount">${team.totalInvestment}억원</div>
             </div>
-            <div class="rank-bar ${barClass}" id="rank-bar-${rankNum}"
+            <div class="coin-stack-area" id="stack-area-${rankNum}"
                  onclick="showFeedback(${team.id}, '${team.name}', ${team.totalInvestment})">
-              <div class="coins-fill"></div>
+              <div class="stack-base"></div>
             </div>
           </div>
         `;
       }).join('');
+
+      // 캔버스 초기화 (DOM 렌더링 완료 후)
+      setTimeout(() => {
+        initCoinCanvas();
+      }, 100);
     }
 
     function handlePresentationStep(step, teams) {
@@ -1211,329 +1882,239 @@
       // 단계 변경 시 피드백 패널 숨기기
       hideFeedbackPanel();
 
+      const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
+
+      console.log(`=== Step ${step} ===`);
+      console.log('Teams:', teams.map(t => `${t.name}: ${t.totalInvestment}억`));
+
       switch(step) {
-        case 1: // 오프닝 - 모든 막대 동시에 4위 높이까지 올라감
+        case 1: // 오프닝 - 모든 코인 스택이 4위 높이까지 랜덤으로 쌓임
           showScreen('results-screen');
-          renderRankBars(teams);
+          renderCoinStacks(teams);
           startCoinRain();
-          animateAllBars(teams);
+
+          // 쌓이는 중: 모두 하이라이트
+          highlightedRanks = [0, 1, 2, 3];
+
+          // 4위 높이 계산 (4위 = teams[3])
+          const fourthHeight = (teams[3].totalInvestment / maxInvestment) * COIN_CONFIG.MAX_STACK_HEIGHT;
+          console.log(`Step 1: 4위 높이 = ${fourthHeight}px`);
+
+          // DOM 렌더링 완료 후 위치 업데이트 및 코인 쌓기 시작
+          setTimeout(() => {
+            updateStackPositions();
+            // 모든 팀(0=1위, 1=2위, 2=3위, 3=4위)이 4위 높이까지 쌓기
+            stackCoinsToHeight(fourthHeight, 8000, [0, 1, 2, 3]);
+          }, 300);
           break;
-        case 2: // 4위 하이라이트 (1,2,3위는 4위 높이에 머무름)
-          highlightRank(4, teams);
+
+        case 2: // 4위 하이라이트 (모두 같은 높이에서 4위 공개)
+          // 4위(index 3)만 하이라이트, 나머지 dimmed
+          highlightedRanks = [3];
+          highlightStack(4, teams);
           break;
-        case 3: // 3위 발표: 먼저 3위 높이까지 상승 후 하이라이트
+
+        case 3: // 3위 발표: 1,2,3위 코인이 랜덤으로 쌓이다가 3위 높이에서 같아짐
+          // 쌓이는 중: 1,2,3위 하이라이트 (index 0,1,2)
+          highlightedRanks = [0, 1, 2];
           animateToThirdPlace(teams);
-          setTimeout(() => {
-            highlightRank(3, teams);
-          }, 4500); // 4초 애니메이션 + 0.5초 여유
           break;
-        case 4: // 데드히트: 먼저 2위 높이까지 상승 후 하이라이트
-          animateToSecondPlace(teams);
-          setTimeout(() => {
-            highlightDeadheat(teams);
-          }, 5100); // 4.6초 애니메이션 + 0.5초 여유
+
+        case 4: // 데드히트: 1,2위 코인이 랜덤으로 쌓이다가 2위 높이에서 같아짐
+          // 쌓이는 중: 1,2위 하이라이트 (index 0,1)
+          highlightedRanks = [0, 1];
+          animateToDeadheat(teams);
           break;
-        case 5: // 1위만 상승 + 점수 공개
-          revealTopTwoScores(teams);
+
+        case 5: // 1위만 코인 상승 + 점수 공개
+          // 1위만 하이라이트 (index 0)
+          highlightedRanks = [0];
+          revealFirstPlace(teams);
           break;
+
         case 6: // 1위 하이라이트
+          // 1위만 하이라이트
+          highlightedRanks = [0];
           highlightWinner(teams);
           break;
+
         case 7: // 최종 결과 화면
           showFinalResult(teams[0], teams[1]);
           break;
       }
     }
 
-    // 모든 막대를 동시에 올리는 함수 (4위 높이까지만)
-    function animateAllBars(teams) {
-      const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
-      const minInvestment = Math.min(...teams.map(t => t.totalInvestment));
-
-      // 4위(최저) 높이까지만 모든 막대 상승
-      const stopHeight = (minInvestment / maxInvestment) * 400;
-      const duration = 9000; // 9초 (더 느리게)
-
-      animateBarsWithJS(stopHeight, duration);
-    }
-
-    // JavaScript로 막대 높이 애니메이션 (카운팅과 동기화)
-    function animateBarsWithJS(targetHeight, duration) {
-      const bars = [];
+    // 특정 순위 하이라이트
+    function highlightStack(rank, teams) {
+      // 모든 스택 dimmed
       for (let i = 1; i <= 4; i++) {
-        const bar = document.getElementById(`rank-bar-${i}`);
-        if (bar) bars.push(bar);
-      }
-
-      const startTime = performance.now();
-
-      function animate(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-
-        // easeOut 효과 (카운팅과 동일)
-        const easeProgress = 1 - Math.pow(1 - progress, 3);
-
-        const currentHeight = easeProgress * targetHeight;
-        bars.forEach(bar => {
-          bar.style.height = currentHeight + 'px';
-        });
-
-        if (progress < 1) {
-          requestAnimationFrame(animate);
+        const area = document.getElementById(`stack-area-${i}`);
+        if (area) {
+          area.classList.remove('highlighted');
+          area.classList.add('dimmed');
         }
       }
 
-      requestAnimationFrame(animate);
-    }
-
-    // 특정 순위 하이라이트 함수
-    function highlightRank(rank, teams) {
-      const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
-
-      // 모든 막대 dimmed 처리
-      for (let i = 1; i <= 4; i++) {
-        const bar = document.getElementById(`rank-bar-${i}`);
-        if (bar) {
-          bar.classList.remove('highlighted');
-          bar.classList.add('dimmed');
-        }
-      }
-
-      // 해당 순위만 하이라이트 + 실제 높이로
-      const bar = document.getElementById(`rank-bar-${rank}`);
+      // 해당 순위만 하이라이트
+      const area = document.getElementById(`stack-area-${rank}`);
       const info = document.getElementById(`rank-info-${rank}`);
-      const team = teams[rank - 1];
-      if (bar) {
-        bar.classList.remove('dimmed');
-        bar.classList.add('highlighted');
-        bar.style.height = (team.totalInvestment / maxInvestment) * 400 + 'px';
+
+      if (area) {
+        area.classList.remove('dimmed');
+        area.classList.add('highlighted');
       }
+
       if (info) {
         setTimeout(() => {
           info.classList.add('visible', 'revealed');
-        }, 1500);
-      }
-
-      // 4위 발표 시: 4위 정보만 보여주고, 나머지 막대는 현재 높이(4위 높이) 유지
-      if (rank === 4) {
-        // 아무것도 하지 않음 - 이미 4위 높이에 있음
-      } else if (rank === 3) {
-        // 3위 공개 시: 4위 정보도 표시 유지
-        const info4 = document.getElementById('rank-info-4');
-        if (info4) info4.classList.add('visible');
+        }, 1000);
       }
     }
 
-    // 3위 발표를 위한 막대 상승 애니메이션 (4위 높이 → 3위 높이)
+    // 3위 발표 애니메이션
     function animateToThirdPlace(teams) {
       const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
-      const fourthHeight = (teams[3].totalInvestment / maxInvestment) * 400;
-      const thirdHeight = (teams[2].totalInvestment / maxInvestment) * 400;
-      const duration = 4000; // 4초 (1.5배 빠르게)
+      const thirdHeight = (teams[2].totalInvestment / maxInvestment) * COIN_CONFIG.MAX_STACK_HEIGHT;
 
-      // 4위는 dimmed, 1,2,3위는 하이라이트 (상승 중)
-      const bar4 = document.getElementById('rank-bar-4');
-      if (bar4) {
-        bar4.classList.remove('highlighted');
-        bar4.classList.add('dimmed');
+      console.log(`Step 3: 3위 높이 = ${thirdHeight}px, 현재 스택:`, coinStacks);
+
+      // 4위 dimmed
+      const area4 = document.getElementById('stack-area-4');
+      if (area4) {
+        area4.classList.add('dimmed');
+        area4.classList.remove('highlighted');
       }
 
-      // 1,2,3위 막대를 3위 높이까지 상승 + 하이라이트
-      const bars = [];
+      // 1,2,3위 하이라이트
       for (let i = 1; i <= 3; i++) {
-        const bar = document.getElementById(`rank-bar-${i}`);
-        if (bar) {
-          bar.classList.remove('dimmed');
-          bar.classList.add('highlighted');
-          bars.push(bar);
+        const area = document.getElementById(`stack-area-${i}`);
+        if (area) {
+          area.classList.remove('dimmed');
+          area.classList.add('highlighted');
         }
       }
 
-      const startTime = performance.now();
-
-      function animate(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const easeProgress = 1 - Math.pow(1 - progress, 3);
-
-        const currentHeight = fourthHeight + (thirdHeight - fourthHeight) * easeProgress;
-        bars.forEach(bar => {
-          bar.style.height = currentHeight + 'px';
-        });
-
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        }
-      }
-
-      requestAnimationFrame(animate);
+      // 코인을 3위 높이까지 쌓기 (1위=0, 2위=1, 3위=2)
+      stackCoinsToHeight(thirdHeight, 5000, [0, 1, 2], () => {
+        // 3위만 하이라이트 (Canvas용)
+        highlightedRanks = [2];
+        // 3위 하이라이트
+        setTimeout(() => {
+          highlightStack(3, teams);
+          // 4위 정보도 표시
+          const info4 = document.getElementById('rank-info-4');
+          if (info4) info4.classList.add('visible');
+        }, 500);
+      });
     }
 
-    // 데드히트를 위한 막대 상승 애니메이션 (3위 높이 → 2위 높이)
-    function animateToSecondPlace(teams) {
+    // 데드히트 애니메이션 (1,2위가 같은 높이까지)
+    function animateToDeadheat(teams) {
       const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
-      const thirdHeight = (teams[2].totalInvestment / maxInvestment) * 400;
-      const secondHeight = (teams[1].totalInvestment / maxInvestment) * 400;
-      const duration = 4600; // 4.6초 (1.3배 빠르게)
+      const secondHeight = (teams[1].totalInvestment / maxInvestment) * COIN_CONFIG.MAX_STACK_HEIGHT;
 
-      // 3,4위는 dimmed
+      console.log(`Step 4: 2위 높이 = ${secondHeight}px, 현재 스택:`, coinStacks);
+
+      // 3,4위 dimmed
       for (let i = 3; i <= 4; i++) {
-        const bar = document.getElementById(`rank-bar-${i}`);
-        if (bar) {
-          bar.classList.remove('highlighted');
-          bar.classList.add('dimmed');
-        }
-      }
-
-      // 1,2위 막대를 2위 높이까지 상승 + 하이라이트 + 정보 숨김
-      const bars = [];
-      for (let i = 1; i <= 2; i++) {
-        const bar = document.getElementById(`rank-bar-${i}`);
+        const area = document.getElementById(`stack-area-${i}`);
         const info = document.getElementById(`rank-info-${i}`);
-        if (bar) {
-          bar.classList.remove('dimmed');
-          bar.classList.add('highlighted');
-          bars.push(bar);
-        }
-        if (info) {
-          info.classList.remove('visible', 'revealed');
-        }
-      }
-
-      const startTime = performance.now();
-
-      function animate(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const easeProgress = 1 - Math.pow(1 - progress, 3);
-
-        const currentHeight = thirdHeight + (secondHeight - thirdHeight) * easeProgress;
-        bars.forEach(bar => {
-          bar.style.height = currentHeight + 'px';
-        });
-
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        }
-      }
-
-      requestAnimationFrame(animate);
-    }
-
-    // 데드히트 하이라이트 함수
-    function highlightDeadheat(teams) {
-      const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
-
-      // 3,4위는 dimmed + 정보 표시
-      for (let i = 3; i <= 4; i++) {
-        const bar = document.getElementById(`rank-bar-${i}`);
-        const info = document.getElementById(`rank-info-${i}`);
-        if (bar) {
-          bar.classList.remove('highlighted');
-          bar.classList.add('dimmed');
-        }
-        if (info) {
-          info.classList.add('visible');
-        }
-      }
-
-      // 1,2위 하이라이트 + 정보는 아직 숨김 (데드히트 오버레이로 가림)
-      for (let i = 1; i <= 2; i++) {
-        const bar = document.getElementById(`rank-bar-${i}`);
-        const info = document.getElementById(`rank-info-${i}`);
-        if (bar) {
-          bar.classList.remove('dimmed');
-          bar.classList.add('highlighted');
-        }
-        if (info) {
-          info.classList.remove('visible', 'revealed');
-        }
-      }
-
-      // 데드히트 오버레이에 정보 표시 (2위 높이까지 올라온 상태이므로 2위 금액 표시)
-      document.getElementById('deadheat-amount').textContent = `${teams[1].totalInvestment}억원`;
-      document.getElementById('deadheat-team1').textContent = teams[0].name;
-      document.getElementById('deadheat-team2').textContent = teams[1].name;
-
-      // 데드히트 오버레이 표시
-      setTimeout(() => {
-        document.getElementById('deadheat-overlay').style.display = 'flex';
-      }, 2000);
-    }
-
-    // 1위, 2위 점수 각각 공개
-    function revealTopTwoScores(teams) {
-      document.getElementById('deadheat-overlay').style.display = 'none';
-
-      const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
-      const secondHeight = (teams[1].totalInvestment / maxInvestment) * 400;
-      const firstHeight = (teams[0].totalInvestment / maxInvestment) * 400;
-
-      // 3,4위는 dimmed 유지
-      for (let i = 3; i <= 4; i++) {
-        const bar = document.getElementById(`rank-bar-${i}`);
-        const info = document.getElementById(`rank-info-${i}`);
-        if (bar) {
-          bar.classList.remove('highlighted');
-          bar.classList.add('dimmed');
+        if (area) {
+          area.classList.add('dimmed');
+          area.classList.remove('highlighted');
         }
         if (info) info.classList.add('visible');
       }
 
-      const bar1 = document.getElementById('rank-bar-1');
-      const bar2 = document.getElementById('rank-bar-2');
-      const info1 = document.getElementById('rank-info-1');
-      const info2 = document.getElementById('rank-info-2');
-
-      // 2위는 하이라이트 유지 (1위와 함께 비교)
-      bar2.classList.add('highlighted');
-      bar2.classList.remove('dimmed');
-
-      // 1위도 하이라이트
-      bar1.classList.add('highlighted');
-      bar1.classList.remove('dimmed');
-
-      // 1위 막대 상승 애니메이션 (줌인 없이)
-      const duration = 4000;
-      const startTime = performance.now();
-
-      function animate(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const easeProgress = 1 - Math.pow(1 - progress, 3);
-
-        // 1위 높이 상승
-        const currentHeight = secondHeight + (firstHeight - secondHeight) * easeProgress;
-        bar1.style.height = currentHeight + 'px';
-
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        } else {
-          // 1위, 2위 정보 표시
-          setTimeout(() => {
-            info1.classList.add('visible', 'revealed');
-            info2.classList.add('visible', 'revealed');
-          }, 500);
+      // 1,2위 하이라이트
+      for (let i = 1; i <= 2; i++) {
+        const area = document.getElementById(`stack-area-${i}`);
+        const info = document.getElementById(`rank-info-${i}`);
+        if (area) {
+          area.classList.remove('dimmed');
+          area.classList.add('highlighted');
+        }
+        if (info) {
+          info.classList.remove('visible', 'revealed');
         }
       }
 
-      requestAnimationFrame(animate);
+      // 코인을 2위 높이까지 쌓기 (1위=0, 2위=1)
+      stackCoinsToHeight(secondHeight, 5000, [0, 1], () => {
+        // 데드히트 - 1,2위 모두 하이라이트 유지
+        highlightedRanks = [0, 1];
+        // 데드히트 오버레이 표시
+        setTimeout(() => {
+          document.getElementById('deadheat-amount').textContent = `${teams[1].totalInvestment}억원`;
+          document.getElementById('deadheat-team1').textContent = teams[0].name;
+          document.getElementById('deadheat-team2').textContent = teams[1].name;
+          document.getElementById('deadheat-overlay').style.display = 'flex';
+        }, 800);
+      });
+    }
+
+    // 1위 점수 공개 (1위만 코인 추가)
+    function revealFirstPlace(teams) {
+      document.getElementById('deadheat-overlay').style.display = 'none';
+
+      const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
+      const firstHeight = (teams[0].totalInvestment / maxInvestment) * COIN_CONFIG.MAX_STACK_HEIGHT;
+      const secondHeight = (teams[1].totalInvestment / maxInvestment) * COIN_CONFIG.MAX_STACK_HEIGHT;
+
+      // 1위가 추가해야 할 높이 (현재 2위 높이에서 1위 높이까지)
+      const additionalHeight = firstHeight - secondHeight;
+
+      console.log(`Step 5: 1위 높이 = ${firstHeight}px, 추가 높이 = ${additionalHeight}px, 현재 스택:`, coinStacks);
+
+      // 3,4위 정보 표시
+      for (let i = 3; i <= 4; i++) {
+        const info = document.getElementById(`rank-info-${i}`);
+        if (info) info.classList.add('visible');
+      }
+
+      // 1위만 하이라이트 (Canvas용) - 2위는 dimmed
+      highlightedRanks = [0];
+
+      // 1위만 DOM 하이라이트, 2위는 dimmed
+      const area1 = document.getElementById('stack-area-1');
+      const area2 = document.getElementById('stack-area-2');
+      if (area1) {
+        area1.classList.remove('dimmed');
+        area1.classList.add('highlighted');
+      }
+      if (area2) {
+        area2.classList.remove('highlighted');
+        area2.classList.add('dimmed');
+      }
+
+      // 1위만 추가 코인 (1위=0)
+      addCoinsToRank(0, additionalHeight, 4000, () => {
+        // 1위, 2위 정보 표시
+        setTimeout(() => {
+          const info1 = document.getElementById('rank-info-1');
+          const info2 = document.getElementById('rank-info-2');
+          if (info1) info1.classList.add('visible', 'revealed');
+          if (info2) info2.classList.add('visible', 'revealed');
+        }, 500);
+      });
     }
 
     // 1위 하이라이트
     function highlightWinner(teams) {
-      const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
-
       // 1위만 하이라이트, 나머지 dimmed
-      const bar1 = document.getElementById('rank-bar-1');
-      const bar2 = document.getElementById('rank-bar-2');
+      for (let i = 2; i <= 4; i++) {
+        const area = document.getElementById(`stack-area-${i}`);
+        if (area) {
+          area.classList.remove('highlighted');
+          area.classList.add('dimmed');
+        }
+      }
 
-      bar1.classList.add('highlighted');
-      bar1.classList.remove('dimmed');
-
-      bar2.classList.remove('highlighted');
-      bar2.classList.add('dimmed');
+      const area1 = document.getElementById('stack-area-1');
+      if (area1) {
+        area1.classList.add('highlighted');
+        area1.classList.remove('dimmed');
+      }
 
       startCoinRain();
     }
@@ -1542,58 +2123,83 @@
     function showFinalResult(winner, second) {
       document.getElementById('deadheat-overlay').style.display = 'none';
 
-      const maxInvestment = Math.max(...rankedTeams.map(t => t.totalInvestment));
-      const bar1 = document.getElementById('rank-bar-1');
-      const bar2 = document.getElementById('rank-bar-2');
-      const bar3 = document.getElementById('rank-bar-3');
-      const bar4 = document.getElementById('rank-bar-4');
-      const info1 = document.getElementById('rank-info-1');
-      const info2 = document.getElementById('rank-info-2');
+      // 결과 화면 숨기기
+      document.getElementById('results-screen').style.display = 'none';
 
-      // 1위만 하이라이트, 나머지는 dimmed
-      bar1.classList.remove('dimmed');
-      bar1.classList.add('highlighted');
-      bar2.classList.remove('highlighted');
-      bar2.classList.add('dimmed');
-      if (bar3) bar3.classList.add('dimmed');
-      if (bar4) bar4.classList.add('dimmed');
-
-      // 실제 높이로 표시
-      bar1.style.height = (winner.totalInvestment / maxInvestment) * 400 + 'px';
-      bar2.style.height = (second.totalInvestment / maxInvestment) * 400 + 'px';
-
-      // 1,2위 정보 표시
-      info1.classList.add('visible', 'revealed');
-      info2.classList.add('visible');
-
-      startCoinRain();
-
+      // 최종 결과 화면 표시
       setTimeout(() => {
         document.getElementById('winner-name').textContent = winner.name;
         document.getElementById('winner-amount').textContent = `총 ${winner.totalInvestment}억원 투자 유치!`;
         document.getElementById('winner-diff').textContent = `2위와의 차이: ${winner.totalInvestment - second.totalInvestment}억원`;
 
+        // 투자 내역 표시 (버튼으로 변경)
+        const investmentDetails = document.getElementById('winner-investment-details');
+        if (winner.investments && winner.investments.length > 0) {
+          investmentDetails.innerHTML = `
+            <div class="winner-investment-title">💰 투자 내역</div>
+            <div class="winner-investment-list">
+              ${winner.investments.map(inv => `
+                <div class="winner-investment-item">
+                  <span class="investor-name">${inv.evaluator || '익명'}</span>
+                  <span class="investment-amount">${inv.amount || inv.investment || 0}억원</span>
+                </div>
+              `).join('')}
+            </div>
+            <div style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #ffd700; opacity: 0.8;">
+              👆 클릭하여 마지막 페이지로 이동
+            </div>
+          `;
+        } else {
+          // investments가 없으면 evaluations에서 계산
+          const evaluations = winner.evaluations || [];
+          if (evaluations.length > 0) {
+            investmentDetails.innerHTML = `
+              <div class="winner-investment-title">💰 투자 내역</div>
+              <div class="winner-investment-list">
+                ${evaluations.map(eval => `
+                  <div class="winner-investment-item">
+                    <span class="investor-name">${eval.evaluator || '익명'}</span>
+                    <span class="investment-amount">${eval.investment || eval.amount || 0}억원</span>
+                  </div>
+                `).join('')}
+              </div>
+              <div style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #ffd700; opacity: 0.8;">
+                👆 클릭하여 마지막 페이지로 이동
+              </div>
+            `;
+          } else {
+            investmentDetails.innerHTML = `
+              <div class="winner-investment-title">💰 투자 내역</div>
+              <div style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #ffd700; opacity: 0.8;">
+                👆 클릭하여 마지막 페이지로 이동
+              </div>
+            `;
+          }
+        }
+
         const feedbackList = document.getElementById('winner-feedback-list');
-        const allFeedbacks = [...(winner.feedbacks || []).slice(0, 3), ...(second.feedbacks || []).slice(0, 2)];
-        feedbackList.innerHTML = allFeedbacks.map(fb => `
+        // 1위의 모든 피드백 표시
+        const winnerFeedbacks = winner.feedbacks || [];
+        feedbackList.innerHTML = winnerFeedbacks.length > 0 ? winnerFeedbacks.map(fb => `
           <div class="winner-feedback-item">
             <div class="feedback-author">${fb.evaluator}</div>
             <div class="feedback-content">${fb.content}</div>
           </div>
-        `).join('');
+        `).join('') : '<div class="winner-feedback-item">피드백이 없습니다.</div>';
 
         document.getElementById('final-result').style.display = 'flex';
         startCoinRain();
-      }, 4000);
+      }, 500);
     }
 
     let currentFeedbackTeamId = null;
 
     function showFeedback(teamId, teamName, amount) {
+      const feedbackOverlay = document.getElementById('feedback-overlay');
       const feedbackPanel = document.getElementById('feedback-panel');
 
       // 같은 막대를 다시 클릭하면 패널 닫기
-      if (currentFeedbackTeamId === teamId && feedbackPanel.classList.contains('show')) {
+      if (currentFeedbackTeamId === teamId && feedbackOverlay.classList.contains('show')) {
         hideFeedbackPanel();
         return;
       }
@@ -1613,12 +2219,21 @@
           <div class="feedback-content">${fb.content}</div>
         </div>
       `).join('');
+      feedbackOverlay.classList.add('show');
       feedbackPanel.classList.add('show');
     }
 
-    function hideFeedbackPanel() {
+    function hideFeedbackPanel(event) {
+      document.getElementById('feedback-overlay').classList.remove('show');
       document.getElementById('feedback-panel').classList.remove('show');
       currentFeedbackTeamId = null;
+    }
+
+    // 마지막 축하 페이지 표시
+    function showClosingScreen() {
+      document.getElementById('final-result').style.display = 'none';
+      document.getElementById('closing-screen').classList.add('show');
+      startCoinRain();
     }
 
     // ============ Socket 이벤트 ============

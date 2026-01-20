@@ -10,8 +10,31 @@ const io = new Server(server, {
   cors: { origin: "*" }
 });
 
-app.use(express.static('public'));
 app.use(express.json());
+
+// ============ 라우트 (static보다 먼저 선언) ============
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'landing.html'));
+});
+
+app.get('/main', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/mobile', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'mobile.html'));
+});
+
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+app.get('/coin_test', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'coin_test.html'));
+});
+
+// static 파일은 라우트 이후에 처리
+app.use(express.static('public'));
 
 // ============ 앱 상태 관리 ============
 const state = {
@@ -32,19 +55,6 @@ const state = {
 // ============ 세션 관리 ============
 const sessions = new Map(); // sessionId -> socketId
 const socketToSession = new Map(); // socketId -> sessionId
-
-// ============ 라우트 ============
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/mobile', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'mobile.html'));
-});
-
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-});
 
 // API: 현재 상태 조회
 app.get('/api/state', (req, res) => {
@@ -374,9 +384,10 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`
 ╔══════════════════════════════════════════════════════════════╗
-║     kt cloud 2026 신입사원 투자 집계 시스템                  ║
+║     Business Architect Investment Day                        ║
 ╠══════════════════════════════════════════════════════════════╣
-║  메인 화면:    http://localhost:${PORT}                        ║
+║  랜딩 페이지:  http://localhost:${PORT}                        ║
+║  메인 화면:    http://localhost:${PORT}/main                   ║
 ║  모바일 평가:  http://localhost:${PORT}/mobile                 ║
 ╚══════════════════════════════════════════════════════════════╝
   `);
