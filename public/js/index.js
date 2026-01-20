@@ -891,9 +891,15 @@
         highlightedRanks = [0, 1];
         // 데드히트 오버레이 표시
         setTimeout(() => {
-          document.getElementById('deadheat-amount').textContent = `${teams[1].totalInvestment}억원`;
+          // 현재 동점 금액 (2위 기준)
+          const tiedAmount = teams[1].totalInvestment;
+          // 남은 투자금 = 1위 - 2위 (아직 공개되지 않은 차이)
+          const remainingAmount = teams[0].totalInvestment - teams[1].totalInvestment;
+
+          document.getElementById('deadheat-amount').textContent = `${tiedAmount}억원`;
           document.getElementById('deadheat-team1').textContent = teams[0].name;
           document.getElementById('deadheat-team2').textContent = teams[1].name;
+          document.getElementById('deadheat-remaining').textContent = `남은 투자금: ${remainingAmount}억원`;
           document.getElementById('deadheat-overlay').style.display = 'flex';
         }, 800);
       });

@@ -911,19 +911,12 @@
       text-align: center;
     }
 
-    .deadheat-text {
+    .deadheat-amount {
       font-size: 5rem;
       font-weight: 900;
       color: #ffd700;
       text-shadow: 0 0 50px rgba(255, 215, 0, 0.8);
       animation: deadheatPulse 0.5s infinite alternate;
-    }
-
-    .deadheat-amount {
-      font-size: 3rem;
-      font-weight: 700;
-      color: #ff6b35;
-      margin-top: 20px;
     }
 
     .deadheat-teams {
@@ -938,9 +931,30 @@
       margin: 0 20px;
     }
 
+    .deadheat-remaining {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #ff6b35;
+      margin-top: 30px;
+    }
+
+    .deadheat-suspense {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 40px;
+      animation: suspensePulse 1s infinite ease-in-out;
+      text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+    }
+
     @keyframes deadheatPulse {
       0% { transform: scale(1); }
-      100% { transform: scale(1.1); }
+      100% { transform: scale(1.05); }
+    }
+
+    @keyframes suspensePulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.02); }
     }
 
     /* 최종 결과 화면 */
