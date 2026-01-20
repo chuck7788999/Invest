@@ -331,6 +331,21 @@ io.on('connection', (socket) => {
     }
   });
 
+  // 관리자: 이전 발표 단계
+  socket.on('admin:prevStep', () => {
+    if (state.presentationStep > 1) {
+      state.presentationStep--;
+      const rankedTeams = getRankedTeams();
+
+      io.to('display').emit('presentation:step', {
+        step: state.presentationStep,
+        rankedTeams
+      });
+      broadcastState();
+      console.log(`[관리자] 발표 단계 (이전): ${state.presentationStep}`);
+    }
+  });
+
   // 관리자: 조 정보 수정
   socket.on('admin:updateTeam', ({ teamId, name, topic }) => {
     const team = state.teams.find(t => t.id === teamId);

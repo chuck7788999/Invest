@@ -18,6 +18,10 @@
 
   <!-- 관리자 컨트롤 패널 -->
   <div class="admin-panel">
+    <div class="admin-nav-buttons" id="admin-nav-buttons" style="display:none;">
+      <button class="admin-nav-btn" onclick="prevStep()" title="이전 단계 (←)">←</button>
+      <button class="admin-nav-btn" onclick="nextStep()" title="다음 단계 (→)">→</button>
+    </div>
     <button class="admin-toggle" onclick="toggleAdmin()">MC 컨트롤</button>
     <div class="admin-controls" id="admin-controls">
       <div class="admin-title">MC 컨트롤 패널</div>
@@ -54,9 +58,12 @@
       </div>
 
       <div class="admin-section" id="presentation-controls" style="display:none;">
-        <button class="admin-btn primary" id="next-btn" onclick="nextStep()">다음 단계</button>
+        <div class="step-nav-buttons">
+          <button class="admin-btn secondary" onclick="prevStep()">← 이전</button>
+          <button class="admin-btn primary" id="next-btn" onclick="nextStep()">다음 →</button>
+        </div>
         <div class="keyboard-hint">
-          <kbd>Space</kbd> 또는 <kbd>→</kbd> 키로 진행
+          <kbd>←</kbd> 이전 / <kbd>→</kbd> <kbd>Space</kbd> 다음
         </div>
       </div>
 

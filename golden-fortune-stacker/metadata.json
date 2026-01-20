@@ -1,0 +1,5 @@
+{
+  "name": "Golden Fortune Stacker",
+  "description": "An interactive visualization where golden coins fall from the sky and stack up into tall pillars, inspired by heaps of wealth.",
+  "requestFramePermissions": []
+}

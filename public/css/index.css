@@ -61,6 +61,44 @@
       font-size: 0.9rem;
     }
 
+    .admin-nav-buttons {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .admin-nav-btn {
+      background: rgba(255, 215, 0, 0.9);
+      color: #000;
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: all 0.2s;
+    }
+
+    .admin-nav-btn:hover {
+      background: #fff;
+      transform: scale(1.1);
+    }
+
+    .admin-nav-btn:active {
+      transform: scale(0.95);
+    }
+
+    .step-nav-buttons {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .step-nav-buttons .admin-btn {
+      flex: 1;
+    }
+
     .admin-controls {
       display: none;
       background: rgba(0, 0, 0, 0.9);

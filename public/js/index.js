@@ -41,6 +41,7 @@
       document.getElementById('results-controls').style.display = currentState.phase === 'results' ? 'block' : 'none';
       document.getElementById('presentation-controls').style.display = currentState.phase === 'presenting' ? 'block' : 'none';
       document.getElementById('step-section').style.display = currentState.phase === 'presenting' ? 'block' : 'none';
+      document.getElementById('admin-nav-buttons').style.display = currentState.phase === 'presenting' ? 'flex' : 'none';
 
       if (currentState.phase === 'presenting') {
         document.getElementById('current-step').textContent = presentationStep;
@@ -66,6 +67,10 @@
 
     function nextStep() {
       socket.emit('admin:nextStep');
+    }
+
+    function prevStep() {
+      socket.emit('admin:prevStep');
     }
 
     function resetSystem() {
@@ -1148,6 +1153,9 @@
         if (e.key === ' ' || e.key === 'ArrowRight' || e.key === 'Enter') {
           e.preventDefault();
           nextStep();
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          prevStep();
         }
       }
     });

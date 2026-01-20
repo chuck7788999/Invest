@@ -373,10 +373,12 @@
       const list = document.getElementById('summary-list');
       if (Array.isArray(data)) {
         list.innerHTML = data.map(item => {
-          const teamName = item.teamName || currentState?.teams?.find(t => t.id === item.teamId)?.name || `팀 ${item.teamId}`;
+          const team = currentState?.teams?.find(t => t.id === item.teamId);
+          const teamName = team?.name || item.teamName || `팀 ${item.teamId}`;
+          const teamTopic = team?.topic || '';
           return `
             <div class="summary-item">
-              <span class="summary-team">${teamName}</span>
+              <span class="summary-team">${teamName}${teamTopic ? ` - ${teamTopic}` : ''}</span>
               <span class="summary-amount">${item.investment}억원</span>
             </div>
           `;
