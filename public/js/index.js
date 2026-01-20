@@ -4,6 +4,41 @@
     let rankedTeams = [];
     let presentationStep = 0;
 
+    // ============ 사운드 컨트롤 함수 ============
+    function setVolume(value) {
+      const volume = parseInt(value) / 100;
+      SoundManager.setVolume(volume);
+      document.getElementById('volume-value').textContent = value + '%';
+    }
+
+    function toggleMute() {
+      const muted = SoundManager.toggleMute();
+      document.getElementById('mute-btn').textContent = muted ? '🔇' : '🔊';
+    }
+
+    function testSound(type) {
+      if (type === 'bgm') {
+        SoundManager.playBGM('waiting');
+        setTimeout(() => SoundManager.stopBGM(), 5000);
+      } else {
+        SoundManager.playSFX('fanfareShort');
+      }
+    }
+
+    // 초기 볼륨 설정 UI 반영
+    function initVolumeUI() {
+      const slider = document.getElementById('volume-slider');
+      const valueEl = document.getElementById('volume-value');
+      const muteBtn = document.getElementById('mute-btn');
+
+      if (slider && valueEl && muteBtn) {
+        const volume = Math.round(SoundManager.masterVolume * 100);
+        slider.value = volume;
+        valueEl.textContent = volume + '%';
+        muteBtn.textContent = SoundManager.isMuted ? '🔇' : '🔊';
+      }
+    }
+
     const stepDescriptions = {
       0: '준비 중',
       1: '🎉 오프닝',
@@ -316,7 +351,8 @@
       COIN_THICKNESS: 5,
       STACK_WIDTH: 100,
       MAX_STACK_HEIGHT: 350,
-      DROP_INTERVAL: 60
+      DROP_INTERVAL: 60,
+      MAX_STACK_COINS: 75 // 최대 쌓이는 코인 수 (1위 금액 바로 아래까지)
     };
 
     // 상태 변수
@@ -331,6 +367,7 @@
     let isAnimating = false;
     let canvasBaseY = 0; // 캔버스 바닥 Y 좌표
     let activeDropIntervals = []; // 활성 드롭 인터벌 추적
+    let coinSoundPlaying = false; // 코인 효과음 재생 상태
 
     // 캔버스 초기화 - DOM 요소 위치 기반
     function initCoinCanvas() {
@@ -394,44 +431,35 @@
       ctx.translate(x, y);
       ctx.rotate(rotation);
 
-      // 1위 코인은 더 크고 화려하게
-      const baseRadius = COIN_CONFIG.COIN_RADIUS;
-      const radius = isWinnerCoin ? baseRadius * 1.3 : baseRadius;
+      // 코인 크기는 동일하게 유지
+      const radius = COIN_CONFIG.COIN_RADIUS;
 
-      // 코인 그라데이션 (1위 코인은 더 밝고 화려하게)
+      // 코인 그라데이션
       const grad = ctx.createLinearGradient(-radius, -radius, radius, radius);
-      if (isWinnerCoin) {
-        grad.addColorStop(0, '#FFEC8B');
-        grad.addColorStop(0.2, '#FFFACD');
-        grad.addColorStop(0.5, '#FFD700');
-        grad.addColorStop(0.8, '#FFA500');
-        grad.addColorStop(1, '#FF8C00');
-      } else {
-        grad.addColorStop(0, '#FFD700');
-        grad.addColorStop(0.3, '#FFF8DC');
-        grad.addColorStop(0.5, '#FFD700');
-        grad.addColorStop(0.7, '#B8860B');
-        grad.addColorStop(1, '#DAA520');
-      }
+      grad.addColorStop(0, '#FFD700');
+      grad.addColorStop(0.3, '#FFF8DC');
+      grad.addColorStop(0.5, '#FFD700');
+      grad.addColorStop(0.7, '#B8860B');
+      grad.addColorStop(1, '#DAA520');
 
       // 코인 외곽
       ctx.beginPath();
       ctx.arc(0, 0, radius, 0, Math.PI * 2);
       ctx.fillStyle = grad;
-      ctx.shadowBlur = isWinnerCoin ? 20 : 8;
-      ctx.shadowColor = isWinnerCoin ? 'rgba(255, 200, 0, 0.9)' : 'rgba(255, 215, 0, 0.5)';
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(255, 215, 0, 0.5)';
       ctx.fill();
 
       // 내부 원
       ctx.beginPath();
       ctx.arc(0, 0, radius * 0.75, 0, Math.PI * 2);
-      ctx.strokeStyle = isWinnerCoin ? '#FF8C00' : '#B8860B';
-      ctx.lineWidth = isWinnerCoin ? 3 : 2;
+      ctx.strokeStyle = '#B8860B';
+      ctx.lineWidth = 2;
       ctx.stroke();
 
       // ₩ 심볼
       ctx.shadowBlur = 0;
-      ctx.fillStyle = isWinnerCoin ? '#CD6600' : '#8B6914';
+      ctx.fillStyle = '#8B6914';
       ctx.font = `bold ${radius * 0.9}px Arial`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -509,8 +537,11 @@
         const landingY = canvasBaseY - (coinStacks[coin.rankIndex] * COIN_CONFIG.COIN_THICKNESS);
 
         if (coin.y >= landingY) {
-          // 코인 착지
-          coinStacks[coin.rankIndex]++;
+          // 최대 스택 높이 체크 - 높이 제한에 도달하면 코인은 쌓이지 않고 사라짐
+          if (coinStacks[coin.rankIndex] < COIN_CONFIG.MAX_STACK_COINS) {
+            coinStacks[coin.rankIndex]++;
+          }
+          // 코인은 항상 제거 (최대 높이 도달 후에도 떨어지는 효과는 유지)
           fallingCoins.splice(i, 1);
         } else {
           // 코인 그리기 (1위 코인은 더 화려하게)
@@ -560,6 +591,25 @@
       };
 
       fallingCoins.push(coin);
+
+      // 코인이 떨어지기 시작하면 효과음 재생
+      startCoinSound();
+    }
+
+    // 코인 효과음 시작
+    function startCoinSound() {
+      if (!coinSoundPlaying) {
+        coinSoundPlaying = true;
+        SoundManager.playSFX('coinStack');
+      }
+    }
+
+    // 코인 효과음 정지
+    function stopCoinSound() {
+      if (coinSoundPlaying) {
+        coinSoundPlaying = false;
+        SoundManager.stopSFX('coinStack');
+      }
     }
 
     // 특정 순위에 떨어지는 중인 코인 수 계산
@@ -636,6 +686,8 @@
       const checkInterval = setInterval(() => {
         if (fallingCoins.length === 0) {
           clearInterval(checkInterval);
+          // 코인이 모두 착지하면 효과음 정지
+          stopCoinSound();
           if (callback) callback();
         }
       }, 50);
@@ -643,6 +695,7 @@
       // 최대 2초 대기 후 강제 진행
       setTimeout(() => {
         clearInterval(checkInterval);
+        stopCoinSound();
         if (callback) callback();
       }, 2000);
     }
@@ -738,6 +791,8 @@
       // 단계 변경 시 피드백 패널 숨기기
       hideFeedbackPanel();
 
+      // 사운드는 각 단계의 결과가 표시될 때 재생 (아래 switch문 내에서 처리)
+
       const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
 
       console.log(`=== Step ${step} ===`);
@@ -748,6 +803,9 @@
           showScreen('results-screen');
           renderCoinStacks(teams);
           startCoinRain();
+
+          // 오프닝 사운드: 드럼롤
+          SoundManager.playSFX('drumroll');
 
           // 쌓이는 중: 모두 하이라이트
           highlightedRanks = [0, 1, 2, 3];
@@ -760,14 +818,20 @@
           setTimeout(() => {
             updateStackPositions();
             // 모든 팀(0=1위, 1=2위, 2=3위, 3=4위)이 4위 높이까지 쌓기
+            // 코인 효과음은 dropCoin에서 자동 재생
             stackCoinsToHeight(fourthHeight, 8000, [0, 1, 2, 3]);
           }, 300);
           break;
 
         case 2: // 4위 하이라이트 (모두 같은 높이에서 4위 공개)
+          // 코인 쌓이는 소리 정지 (혹시 남아있을 경우)
+          stopCoinSound();
           // 4위(index 3)만 하이라이트, 나머지 dimmed
           highlightedRanks = [3];
           highlightStack(4, teams);
+          // 4위 공개 시 효과음 (즉시 재생)
+          SoundManager.playSFX('coinDrop');
+          SoundManager.playSFX('fanfareShort');
           break;
 
         case 3: // 3위 발표: 1,2,3위 코인이 랜덤으로 쌓이다가 3위 높이에서 같아짐
@@ -851,12 +915,16 @@
       }
 
       // 코인을 3위 높이까지 쌓기 (1위=0, 2위=1, 3위=2)
+      // 코인 효과음은 dropCoin에서 자동 재생, waitForCoinsToLand에서 자동 정지
       stackCoinsToHeight(thirdHeight, 5000, [0, 1, 2], () => {
         // 3위만 하이라이트 (Canvas용)
         highlightedRanks = [2];
         // 3위 하이라이트
         setTimeout(() => {
           highlightStack(3, teams);
+          // 3위 공개 시 효과음 (결과 표시 시점)
+          SoundManager.playSFX('coinDrop');
+          setTimeout(() => SoundManager.playSFX('fanfareShort'), 500);
           // 4위 정보도 표시
           const info4 = document.getElementById('rank-info-4');
           if (info4) info4.classList.add('visible');
@@ -896,21 +964,38 @@
       }
 
       // 코인을 2위 높이까지 쌓기 (1위=0, 2위=1)
+      // 코인 효과음은 dropCoin에서 자동 재생, waitForCoinsToLand에서 자동 정지
       stackCoinsToHeight(secondHeight, 5000, [0, 1], () => {
         // 데드히트 - 1,2위 모두 하이라이트 유지
         highlightedRanks = [0, 1];
-        // 데드히트 오버레이 표시
+        // 오버레이 표시
         setTimeout(() => {
           // 현재 동점 금액 (2위 기준)
           const tiedAmount = teams[1].totalInvestment;
           // 남은 투자금 = 1위 - 2위 (아직 공개되지 않은 차이)
           const remainingAmount = teams[0].totalInvestment - teams[1].totalInvestment;
 
-          document.getElementById('deadheat-amount').textContent = `${tiedAmount}억원`;
-          document.getElementById('deadheat-team1').textContent = teams[0].name;
-          document.getElementById('deadheat-team2').textContent = teams[1].name;
-          document.getElementById('deadheat-remaining').textContent = `남은 투자금: ${remainingAmount}억원`;
-          document.getElementById('deadheat-overlay').style.display = 'flex';
+          // 실제 동점인지 확인 (1위와 2위가 완전 동점)
+          if (remainingAmount === 0) {
+            // 박빙의 승부 - 검 부딪히는 소리 + 긴장감 효과음
+            SoundManager.playSFX('swordClash');
+            SoundManager.playSFX('tension');
+            // 박빙의 승부 화면 표시
+            document.getElementById('tiebreaker-amount').textContent = `${tiedAmount}억원`;
+            document.getElementById('tiebreaker-team1').textContent = teams[0].name;
+            document.getElementById('tiebreaker-team2').textContent = teams[1].name;
+            document.getElementById('tiebreaker-overlay').style.display = 'flex';
+          } else {
+            // 일반 데드히트 - 심장박동 + 긴장감 효과음
+            SoundManager.playSFX('heartbeat');
+            SoundManager.playSFX('tension');
+            // 일반 데드히트 화면 표시
+            document.getElementById('deadheat-amount').textContent = `${tiedAmount}억원`;
+            document.getElementById('deadheat-team1').textContent = teams[0].name;
+            document.getElementById('deadheat-team2').textContent = teams[1].name;
+            document.getElementById('deadheat-remaining').textContent = `남은 투자금: ${remainingAmount}억원`;
+            document.getElementById('deadheat-overlay').style.display = 'flex';
+          }
         }, 800);
       });
     }
@@ -918,6 +1003,13 @@
     // 1위 점수 공개 (1위만 코인 추가) - 과장된 효과
     function revealFirstPlace(teams) {
       document.getElementById('deadheat-overlay').style.display = 'none';
+      document.getElementById('tiebreaker-overlay').style.display = 'none';
+
+      // 심장박동 효과음 정지
+      SoundManager.stopSFX('heartbeat');
+
+      // 1위 공개 효과음
+      SoundManager.playSFX('reveal');
 
       const maxInvestment = Math.max(...teams.map(t => t.totalInvestment));
       const firstHeight = (teams[0].totalInvestment / maxInvestment) * COIN_CONFIG.MAX_STACK_HEIGHT;
@@ -951,8 +1043,14 @@
         area2.classList.add('dimmed');
       }
 
+      // 코인 떨어지는 소리
+      setTimeout(() => SoundManager.playSFX('coinDrop'), 300);
+
       // 1위에 과장된 코인 효과 (더 많은 코인, 더 빠른 속도)
       addCoinsToRankExaggerated(0, exaggeratedHeight, 5000, () => {
+        // 1위 공개 완료 시 팡파레 + 환호성
+        SoundManager.playSFX('fanfareWin');
+        SoundManager.playSFX('cheering');
         // 1위, 2위 정보 표시
         setTimeout(() => {
           const info1 = document.getElementById('rank-info-1');
@@ -963,48 +1061,56 @@
       });
     }
 
-    // 1위 전용 과장된 코인 추가 함수
+    // 1위 전용 과장된 코인 추가 함수 - 많은 코인이 쏟아지는 효과
     function addCoinsToRankExaggerated(rankIndex, additionalHeight, duration, callback) {
-      const additionalCoins = Math.floor(additionalHeight / COIN_CONFIG.COIN_THICKNESS);
+      // 최소 15개의 코인은 항상 추가 (동점일 때도 효과 표시)
+      const additionalCoins = Math.max(15, Math.floor(additionalHeight / COIN_CONFIG.COIN_THICKNESS));
       const newTarget = coinStacks[rankIndex] + additionalCoins;
       targetStacks[rankIndex] = newTarget;
 
       console.log(`addCoinsToRankExaggerated: rank=${rankIndex}, additionalCoins=${additionalCoins}, newTarget=${newTarget}`);
 
-      const stackX = stackPositions[rankIndex];
+      const stackX = stackCenterX[rankIndex];
       if (!stackX) {
         console.warn(`Stack position not found for rank ${rankIndex}`);
+        if (callback) callback();
         return;
       }
 
-      // 더 짧은 간격으로 더 많은 코인 생성 (과장 효과)
-      const interval = Math.max(30, duration / (additionalCoins * 2));
+      // 코인 효과음 시작
+      startCoinSound();
+
+      // 코인 개수를 3배로 늘려서 더 많이 떨어뜨림
+      const totalCoinsToAdd = Math.max(50, additionalCoins * 3);
+      // 더 빠른 간격으로 코인 생성 (더 많은 코인이 동시에 떨어지는 효과)
+      const interval = Math.max(20, duration / totalCoinsToAdd);
       let coinsAdded = 0;
-      const totalCoinsToAdd = additionalCoins * 2; // 2배의 코인 효과
 
       const coinInterval = setInterval(() => {
         if (coinsAdded >= totalCoinsToAdd) {
           clearInterval(coinInterval);
           // 콜백은 모든 코인이 착지한 후
           setTimeout(() => {
+            // 코인 효과음 정지
+            stopCoinSound();
             if (callback) callback();
           }, 1500);
           return;
         }
 
         // 더 넓은 범위에서 코인 생성 (더 화려한 효과)
-        const spreadRange = 120;
+        const spreadRange = 150;
         const x = stackX + (Math.random() - 0.5) * spreadRange;
 
         fallingCoins.push({
           x: x,
-          y: -50 - Math.random() * 100,
-          vy: 2 + Math.random() * 4, // 더 빠른 초기 속도
-          vx: (Math.random() - 0.5) * 3,
+          y: -50 - Math.random() * 150,
+          vy: 3 + Math.random() * 5, // 빠른 초기 속도
+          vx: (Math.random() - 0.5) * 4,
           rotation: Math.random() * Math.PI * 2,
           rotationSpeed: (Math.random() - 0.5) * 0.3,
           rankIndex: rankIndex,
-          isWinnerCoin: true // 1위 코인 표시
+          isWinnerCoin: false // 일반 코인과 동일한 크기
         });
 
         coinsAdded++;
@@ -1013,6 +1119,9 @@
 
     // 1위 하이라이트
     function highlightWinner(teams) {
+      // 승리 BGM으로 전환
+      SoundManager.playBGM('victory');
+
       // 1위만 하이라이트, 나머지 dimmed
       for (let i = 2; i <= 4; i++) {
         const area = document.getElementById(`stack-area-${i}`);
@@ -1034,9 +1143,14 @@
 
     function showFinalResult(winner, second) {
       document.getElementById('deadheat-overlay').style.display = 'none';
+      document.getElementById('tiebreaker-overlay').style.display = 'none';
 
       // 결과 화면 숨기기
       document.getElementById('results-screen').style.display = 'none';
+
+      // 승리 BGM 및 환호성
+      SoundManager.playBGM('victory');
+      SoundManager.playSFX('cheering');
 
       // 최종 결과 화면 표시
       setTimeout(() => {
@@ -1044,60 +1158,25 @@
         document.getElementById('winner-amount').textContent = `총 ${winner.totalInvestment}억원 투자 유치!`;
         document.getElementById('winner-diff').textContent = `2위와의 차이: ${winner.totalInvestment - second.totalInvestment}억원`;
 
-        // 투자 내역 표시 (버튼으로 변경)
+        // 클릭하여 세션 종료 안내
         const investmentDetails = document.getElementById('winner-investment-details');
-        if (winner.investments && winner.investments.length > 0) {
-          investmentDetails.innerHTML = `
-            <div class="winner-investment-title">💰 투자 내역</div>
-            <div class="winner-investment-list">
-              ${winner.investments.map(inv => `
-                <div class="winner-investment-item">
-                  <span class="investor-name">${inv.evaluator || '익명'}</span>
-                  <span class="investment-amount">${inv.amount || inv.investment || 0}억원</span>
-                </div>
-              `).join('')}
-            </div>
-            <div style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #ffd700; opacity: 0.8;">
-              👆 클릭하여 마지막 페이지로 이동
-            </div>
-          `;
-        } else {
-          // investments가 없으면 evaluations에서 계산
-          const evaluations = winner.evaluations || [];
-          if (evaluations.length > 0) {
-            investmentDetails.innerHTML = `
-              <div class="winner-investment-title">💰 투자 내역</div>
-              <div class="winner-investment-list">
-                ${evaluations.map(eval => `
-                  <div class="winner-investment-item">
-                    <span class="investor-name">${eval.evaluator || '익명'}</span>
-                    <span class="investment-amount">${eval.investment || eval.amount || 0}억원</span>
-                  </div>
-                `).join('')}
-              </div>
-              <div style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #ffd700; opacity: 0.8;">
-                👆 클릭하여 마지막 페이지로 이동
-              </div>
-            `;
-          } else {
-            investmentDetails.innerHTML = `
-              <div class="winner-investment-title">💰 투자 내역</div>
-              <div style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #ffd700; opacity: 0.8;">
-                👆 클릭하여 마지막 페이지로 이동
-              </div>
-            `;
-          }
-        }
+        investmentDetails.innerHTML = `
+          <div style="text-align: center; margin-top: 30px; font-size: 1.2rem; color: #ffd700; cursor: pointer;">
+            👆 클릭하여 세션 종료
+          </div>
+        `;
 
         const feedbackList = document.getElementById('winner-feedback-list');
-        // 1위의 모든 피드백 표시
+        // 1위의 모든 피드백 표시 (가로 롤링을 위해 2배로 복제)
         const winnerFeedbacks = winner.feedbacks || [];
-        feedbackList.innerHTML = winnerFeedbacks.length > 0 ? winnerFeedbacks.map(fb => `
+        const feedbackItems = winnerFeedbacks.length > 0 ? winnerFeedbacks.map(fb => `
           <div class="winner-feedback-item">
             <div class="feedback-author">${fb.evaluator}</div>
             <div class="feedback-content">${fb.content}</div>
           </div>
         `).join('') : '<div class="winner-feedback-item">피드백이 없습니다.</div>';
+        // 무한 롤링을 위해 콘텐츠 2배 복제
+        feedbackList.innerHTML = feedbackItems + feedbackItems;
 
         document.getElementById('final-result').style.display = 'flex';
         startCoinRain();
@@ -1146,12 +1225,24 @@
       document.getElementById('final-result').style.display = 'none';
       document.getElementById('closing-screen').classList.add('show');
       startCoinRain();
+
+      // 클로징 BGM으로 전환
+      SoundManager.playBGM('closing');
+
+      // 축하 환호 효과음 4초 재생
+      const celebrateSound = SoundManager.playSFX('battleCrowd');
+      if (celebrateSound) {
+        setTimeout(() => {
+          celebrateSound.stop();
+        }, 4000);
+      }
     }
 
     // ============ Socket 이벤트 ============
     socket.emit('display:join');
 
     socket.on('state:update', (state) => {
+      const prevPhase = currentState?.phase;
       currentState = state;
 
       document.getElementById('connected-count').textContent = state.connectedCount;
@@ -1170,6 +1261,11 @@
       renderTeams(state.teams);
       updateAdminUI();
 
+      // Phase별 BGM 재생 (phase가 변경될 때만)
+      if (prevPhase !== state.phase) {
+        handlePhaseSound(state.phase);
+      }
+
       if (state.phase === 'waiting') {
         showScreen('waiting-screen');
       } else if (state.phase === 'evaluating') {
@@ -1182,8 +1278,36 @@
       }
     });
 
+    // Phase별 BGM 처리
+    function handlePhaseSound(phase) {
+      switch (phase) {
+        case 'waiting':
+          SoundManager.playBGM('waiting');
+          // BGM 상태 저장
+          sessionStorage.setItem('bgm_playing', 'true');
+          sessionStorage.setItem('bgm_type', 'waiting');
+          break;
+        case 'evaluating':
+          SoundManager.playBGM('evaluating');
+          sessionStorage.setItem('bgm_playing', 'true');
+          sessionStorage.setItem('bgm_type', 'evaluating');
+          break;
+        case 'results':
+          // 집계 완료 시 짧은 효과음 (BGM 유지)
+          SoundManager.playSFX('notification');
+          break;
+        case 'presenting':
+          // 결과 발표 시작 시 waiting BGM 정지하고 presenting BGM으로 전환
+          SoundManager.playBGM('presenting');
+          sessionStorage.setItem('bgm_playing', 'true');
+          sessionStorage.setItem('bgm_type', 'presenting');
+          break;
+      }
+    }
+
     socket.on('evaluator:connected', ({ name, count }) => {
       showToast(`✅ ${name}님 접속 완료!`);
+      SoundManager.playSFX('notification');
       const list = document.getElementById('connection-list');
       list.innerHTML += `<span class="connection-item">${name}</span>`;
     });
@@ -1194,6 +1318,7 @@
 
     socket.on('evaluation:completed', ({ name, evaluatedCount, totalEvaluators }) => {
       showToast(`📝 ${name}님 평가 완료! (${evaluatedCount}/${totalEvaluators})`);
+      SoundManager.playSFX('submitComplete');
       const remaining = totalEvaluators - evaluatedCount;
       document.getElementById('progress-detail').textContent =
         remaining > 0 ? `${remaining}명 평가 중...` : '모든 평가 완료!';
@@ -1203,6 +1328,7 @@
       document.getElementById('progress-detail').textContent = '🎉 모든 평가가 완료되었습니다!';
       document.getElementById('start-presentation-btn').classList.add('show');
       showToast('모든 평가 완료! 결과 발표를 시작하세요');
+      SoundManager.playSFX('fanfareShort');
     });
 
     socket.on('presentation:step', ({ step, rankedTeams: teams }) => {
@@ -1229,3 +1355,32 @@
     // ============ 초기화 ============
     createParticles();
     generateQR();
+
+    // 사운드 UI 초기화 및 대기 BGM 시작
+    setTimeout(() => {
+      initVolumeUI();
+    }, 500);
+
+    // 브라우저 자동재생 정책 대응: 사용자 인터랙션 감지 후 BGM 활성화
+    let audioUnlocked = false;
+    function unlockAudio() {
+      if (audioUnlocked) return;
+      audioUnlocked = true;
+
+      // Howler unlock
+      if (typeof Howler !== 'undefined') {
+        Howler.ctx?.resume();
+      }
+
+      // 현재 phase에 맞는 BGM 시작 (playBGM 내부에서 같은 BGM 재생 중이면 무시됨)
+      if (currentState?.phase) {
+        handlePhaseSound(currentState.phase);
+      }
+
+      console.log('[Audio] Unlocked by user interaction');
+    }
+
+    // 다양한 인터랙션 이벤트로 오디오 잠금 해제
+    ['click', 'touchstart', 'keydown'].forEach(event => {
+      document.addEventListener(event, unlockAudio, { once: true });
+    });

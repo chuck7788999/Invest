@@ -42,6 +42,10 @@ app.get('/coin_test', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'coin_test.html'));
 });
 
+app.get('/test-tie', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'test-tie.html'));
+});
+
 app.get('/history', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin-history.html'));
 });
@@ -383,6 +387,32 @@ io.on('connection', (socket) => {
     broadcastState();
     io.emit('system:reset');
     console.log('[관리자] 시스템 리셋');
+  });
+
+  // 테스트: 점수 직접 설정 (동점 시나리오 테스트용)
+  socket.on('test:setScores', ({ scores }) => {
+    // scores: { teamId: investment, ... }
+    // 예: { 1: 12, 2: 15, 3: 15, 4: 8 }
+
+    // 상태를 results로 변경
+    state.phase = 'results';
+    state.presentationStep = 0;
+
+    // 각 팀의 투자금 설정
+    state.teams.forEach(team => {
+      if (scores[team.id] !== undefined) {
+        team.totalInvestment = scores[team.id];
+      }
+    });
+
+    // 데모 평가자 정보 설정
+    state.evaluators.clear();
+    state.connectedCount = 5;
+    state.evaluatedCount = 5;
+    state.totalEvaluators = 5;
+
+    broadcastState();
+    console.log('[테스트] 점수 설정:', scores);
   });
 
   // 데모: 평가자 추가

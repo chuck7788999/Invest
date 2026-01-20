@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Business Architect Investment Day</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+  <script src="js/sound-manager.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
 
@@ -70,8 +72,9 @@
       font-size: 5rem;
       font-weight: 900;
       font-style: italic;
-      line-height: 1.1;
+      line-height: 1.2;
       text-transform: uppercase;
+      padding: 0 20px;
     }
 
     .title-line .white {
@@ -79,14 +82,25 @@
     }
 
     .title-line .gradient {
-      background: linear-gradient(90deg, #4da6ff, #00d4ff);
+      background: linear-gradient(90deg, #FFD700, #FFA500, #FF8C00);
+      background-size: 200% 100%;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      animation: gradientShift 3s ease infinite;
     }
 
     .title-line-2 {
       font-size: 5.5rem;
+    }
+
+    @keyframes gradientShift {
+      0%, 100% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
     }
 
     /* EVENT START 버튼 */
@@ -99,19 +113,30 @@
       font-size: 1.5rem;
       font-weight: 700;
       color: #fff;
-      background: linear-gradient(135deg, #1a5a9e 0%, #0d8b9f 50%, #0a6b7a 100%);
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
+      background-size: 200% 200%;
       border: none;
       border-radius: 60px;
       cursor: pointer;
-      box-shadow: 0 10px 40px rgba(0, 150, 200, 0.3);
+      box-shadow: 0 10px 40px rgba(255, 165, 0, 0.4);
       transition: all 0.3s ease;
       text-transform: uppercase;
       letter-spacing: 0.1em;
+      animation: btnGradientShift 3s ease infinite;
+    }
+
+    @keyframes btnGradientShift {
+      0%, 100% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
     }
 
     .event-start-btn:hover {
       transform: scale(1.05);
-      box-shadow: 0 15px 50px rgba(0, 150, 200, 0.5);
+      box-shadow: 0 15px 50px rgba(255, 165, 0, 0.6);
     }
 
     .event-start-btn .play-icon {
@@ -150,6 +175,38 @@
       }
     }
 
+    /* 진행 준비 버튼 */
+    .prepare-btn {
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      padding: 15px 30px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
+
+    .prepare-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 30px rgba(102, 126, 234, 0.6);
+    }
+
+    .prepare-btn.ready {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4);
+    }
+
+    .prepare-btn.ready:hover {
+      box-shadow: 0 8px 30px rgba(56, 239, 125, 0.6);
+    }
+
     /* 반응형 */
     @media (max-width: 1200px) {
       .title-line {
@@ -181,6 +238,9 @@
 <body>
   <div class="bg-gradient"></div>
 
+  <!-- 진행 준비 버튼 -->
+  <button type="button" class="prepare-btn" id="prepare-btn" onclick="prepareBGM()">🎵 진행 준비</button>
+
   <!-- 파티클 컨테이너 -->
   <div id="particles"></div>
 
@@ -196,7 +256,7 @@
       </div>
     </div>
 
-    <button class="event-start-btn" onclick="startEvent()">
+    <button type="button" class="event-start-btn" onclick="startEvent()">
       <span class="play-icon"></span>
       Event Start
     </button>
@@ -219,8 +279,37 @@
       }
     }
 
+    // BGM 시작 (사용자 인터랙션 필요)
+    let bgmStarted = false;
+
+    // 진행 준비 버튼 클릭 시 BGM 시작
+    function prepareBGM() {
+      if (bgmStarted) return;
+      bgmStarted = true;
+
+      // SoundManager 초기화 확인
+      if (typeof SoundManager !== 'undefined') {
+        SoundManager.init();
+        SoundManager.playBGM('waiting');
+        // BGM이 재생 중임을 저장 (main 페이지에서 확인용)
+        sessionStorage.setItem('bgm_playing', 'true');
+        sessionStorage.setItem('bgm_type', 'waiting');
+        console.log('[Landing] BGM 시작');
+      }
+
+      // 버튼 상태 변경
+      const btn = document.getElementById('prepare-btn');
+      btn.textContent = '✅ 준비 완료';
+      btn.classList.add('ready');
+    }
+
     // 이벤트 시작
     function startEvent() {
+      // BGM이 시작되지 않았다면 시작
+      if (!bgmStarted) {
+        prepareBGM();
+      }
+      // main 페이지로 이동
       window.location.href = '/main';
     }
 
