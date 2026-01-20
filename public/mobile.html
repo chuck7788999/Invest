@@ -665,9 +665,9 @@
       <p class="login-desc">성함을 입력하고 평가에 참여해주세요</p>
 
       <div class="input-group">
-        <label class="input-label">성함 (직책)</label>
+        <label class="input-label">성함</label>
         <input type="text" class="input-field" id="evaluator-name"
-               placeholder="예: 홍길동 부사장" autocomplete="off">
+               placeholder="예: 홍길동님" autocomplete="off">
       </div>
 
       <button class="btn-primary" id="join-btn" onclick="joinEvaluation()">
@@ -743,7 +743,7 @@
   <script>
     // ============ 상태 관리 ============
     const socket = io({
-      transports: ['websocket'],  // 웹소켓만 사용 (폴링 비활성화로 성능 향상)
+      transports: ['polling', 'websocket'],  // 폴링 우선, 웹소켓 업그레이드 (Vercel 호환)
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       timeout: 20000
