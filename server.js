@@ -5,11 +5,18 @@ const { Server } = require('socket.io');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const { connectDB, getEvents, getEventById, deleteEvent, saveCurrentSession } = require('./db/models');
+const appConfig = require('./config/app-config.json');
 
 const app = express();
 const server = http.createServer(app);
+
+// CORS 설정: 환경에 따라 허용 origin 결정
+const corsOrigins = process.env.NODE_ENV === 'production'
+  ? appConfig.server.corsOrigins
+  : '*';
+
 const io = new Server(server, {
-  cors: { origin: "*" }
+  cors: { origin: corsOrigins }
 });
 
 app.use(express.json());
@@ -43,18 +50,22 @@ app.get('/history', (req, res) => {
 app.use(express.static('public'));
 
 // ============ 앱 상태 관리 ============
+// config에서 팀 정보 로드
+const initialTeams = appConfig.teams.map(team => ({
+  id: team.id,
+  name: team.name,
+  topic: team.topic,
+  totalInvestment: 0,
+  feedbacks: []
+}));
+
 const state = {
   phase: 'waiting', // waiting, evaluating, results, presenting
   presentationStep: 0, // 0: 대기, 1: 오프닝, 2: 4위, 3: 3위, 4: 1/2위 데드히트, 5: 최종
-  teams: [
-    { id: 1, name: '1조', topic: 'kt cloud 상품문의 여정의 동반자, Journey', totalInvestment: 0, feedbacks: [] },
-    { id: 2, name: '2조', topic: '세일즈 에이전트, Briefy', totalInvestment: 0, feedbacks: [] },
-    { id: 3, name: '3조', topic: '효율화를 위한 Jira 자동화 서비스, Ji-Key-Ra', totalInvestment: 0, feedbacks: [] },
-    { id: 4, name: '4조', topic: '출장품의 프로세스 효율화, TripON', totalInvestment: 0, feedbacks: [] }
-  ],
-  presentationOrder: [2, 4, 3, 1], // 발표 순서 (조 ID 순서)
+  teams: initialTeams,
+  presentationOrder: appConfig.presentation.order,
   evaluators: new Map(), // sessionId -> { name, connected, evaluated, evaluations }
-  totalEvaluators: 12, // 기본 평가자 수
+  totalEvaluators: appConfig.presentation.totalEvaluators,
   connectedCount: 0,
   evaluatedCount: 0
 };
@@ -454,7 +465,7 @@ io.on('connection', (socket) => {
 });
 
 // ============ 서버 시작 ============
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || appConfig.server.defaultPort;
 
 async function startServer() {
   // MongoDB 연결 시도
@@ -463,7 +474,7 @@ async function startServer() {
   server.listen(PORT, () => {
     console.log(`
 ╔══════════════════════════════════════════════════════════════╗
-║     Business Architect Investment Day                        ║
+║     ${appConfig.app.name}                        ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  랜딩 페이지:  http://localhost:${PORT}                        ║
 ║  메인 화면:    http://localhost:${PORT}/main                   ║

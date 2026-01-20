@@ -1,0 +1,53 @@
+{
+  "app": {
+    "name": "KT Cloud 2026 신입사원 투자의 날",
+    "version": "1.0.0"
+  },
+  "teams": [
+    {
+      "id": 1,
+      "name": "1조",
+      "topic": "kt cloud 상품문의 여정의 동반자, Journey",
+      "members": ["강찬영", "권현준", "김동현", "박창윤", "이예령"]
+    },
+    {
+      "id": 2,
+      "name": "2조",
+      "topic": "kt cloud와 함께 성장하는 파트너, Partner Growth Hub",
+      "members": ["고은채", "김태민", "박예진", "송우영", "이재원"]
+    },
+    {
+      "id": 3,
+      "name": "3조",
+      "topic": "AI기반 맞춤형 클라우드 컨설턴트, AICC",
+      "members": ["김민수", "김서연", "김지훈", "유하은", "한지우"]
+    },
+    {
+      "id": 4,
+      "name": "4조",
+      "topic": "오류 탈출 넘버원! 트러블 슈팅 챗봇",
+      "members": ["김민준", "박서윤", "이도윤", "장민혁", "허수빈"]
+    }
+  ],
+  "presentation": {
+    "order": [2, 4, 3, 1],
+    "totalEvaluators": 12
+  },
+  "evaluation": {
+    "totalBudget": 10,
+    "minFeedbackLength": 10,
+    "maxInvestmentPerTeam": 10
+  },
+  "storage": {
+    "keys": {
+      "session": "kt_eval_session",
+      "name": "kt_eval_name",
+      "data": "kt_eval_data",
+      "adminAuth": "kt_admin_auth"
+    }
+  },
+  "server": {
+    "defaultPort": 3000,
+    "corsOrigins": ["http://localhost:3000", "https://invest-k882.onrender.com"]
+  }
+}

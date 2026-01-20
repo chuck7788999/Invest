@@ -1,0 +1,629 @@
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 100%);
+      min-height: 100vh;
+      color: #fff;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    /* 헤더 */
+    .header {
+      text-align: center;
+      padding: 20px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      font-size: 0.8rem;
+      color: #ff6b35;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+
+    .title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-top: 5px;
+      background: linear-gradient(90deg, #ffd700, #ff6b35);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* 로그인 화면 */
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 50px;
+    }
+
+    .login-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .login-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .login-desc {
+      color: #888;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .input-group {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 0.9rem;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 15px 20px;
+      font-size: 1.1rem;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .input-field:focus {
+      border-color: #ffd700;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 18px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ffd700, #ff6b35);
+      color: #000;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary:disabled {
+      background: #444;
+      color: #888;
+      cursor: not-allowed;
+    }
+
+    /* 대기 화면 */
+    #waiting-screen {
+      display: none;
+      text-align: center;
+      padding-top: 50px;
+    }
+
+    .waiting-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .waiting-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .waiting-desc {
+      color: #888;
+    }
+
+    .user-info {
+      margin-top: 30px;
+      padding: 20px;
+      background: rgba(255, 215, 0, 0.1);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+    }
+
+    .user-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #ffd700;
+    }
+
+    .user-status {
+      font-size: 0.9rem;
+      color: #888;
+      margin-top: 5px;
+    }
+
+    /* 평가 화면 */
+    #evaluation-screen {
+      display: none;
+    }
+
+    .eval-progress {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .eval-progress-text {
+      font-size: 0.9rem;
+      color: #888;
+    }
+
+    .eval-progress-bar {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    .eval-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ffd700, #ff6b35);
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+
+    .team-evaluation {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .team-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .team-number {
+      background: linear-gradient(135deg, #ffd700, #ff6b35);
+      color: #000;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-right: 10px;
+    }
+
+    .team-topic {
+      font-size: 1rem;
+      font-weight: 500;
+      line-height: 1.3;
+      flex: 1;
+    }
+
+    .investment-section {
+      margin-bottom: 15px;
+    }
+
+    .investment-label {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .investment-value {
+      color: #ffd700;
+      font-weight: 700;
+    }
+
+    .investment-slider {
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      -webkit-appearance: none;
+      appearance: none;
+      outline: none;
+    }
+
+    .investment-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ffd700, #ff6b35);
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(255, 215, 0, 0.5);
+    }
+
+    .investment-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .investment-btn {
+      flex: 1;
+      min-width: 60px;
+      padding: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 8px;
+      background: transparent;
+      color: #ffd700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .investment-btn:active,
+    .investment-btn.active {
+      background: rgba(255, 215, 0, 0.2);
+      border-color: #ffd700;
+    }
+
+    .feedback-section {
+      margin-top: 15px;
+    }
+
+    .feedback-label {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .feedback-input {
+      width: 100%;
+      padding: 12px;
+      font-size: 0.95rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      resize: none;
+      min-height: 80px;
+      outline: none;
+    }
+
+    .feedback-input:focus {
+      border-color: rgba(255, 215, 0, 0.5);
+    }
+
+    .submit-section {
+      padding: 20px 0;
+      position: sticky;
+      bottom: 0;
+      background: linear-gradient(to top, #0a0a1a, transparent);
+    }
+
+    .total-investment {
+      text-align: center;
+      margin-bottom: 15px;
+      padding: 15px;
+      background: rgba(255, 215, 0, 0.1);
+      border-radius: 12px;
+    }
+
+    .total-label {
+      font-size: 0.9rem;
+      color: #888;
+    }
+
+    .total-value {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #ffd700;
+    }
+
+    /* 완료 화면 */
+    #complete-screen {
+      display: none;
+      text-align: center;
+      padding-top: 80px;
+    }
+
+    .complete-icon {
+      font-size: 5rem;
+      margin-bottom: 20px;
+      animation: celebrate 1s ease;
+    }
+
+    @keyframes celebrate {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    .complete-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #ffd700;
+      margin-bottom: 10px;
+    }
+
+    .complete-desc {
+      color: #888;
+      font-size: 1.1rem;
+    }
+
+    .complete-summary {
+      margin-top: 40px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      text-align: left;
+    }
+
+    .summary-title {
+      font-size: 1rem;
+      color: #888;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .summary-item:last-child {
+      border-bottom: none;
+    }
+
+    .summary-team {
+      font-weight: 500;
+    }
+
+    .summary-amount {
+      color: #ffd700;
+      font-weight: 700;
+    }
+
+    /* 에러 메시지 */
+    .error-message {
+      display: none;
+      background: rgba(255, 87, 87, 0.2);
+      border: 1px solid rgba(255, 87, 87, 0.5);
+      color: #ff5757;
+      padding: 12px 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+    }
+
+    /* 에러 팝업 */
+    .error-popup-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .error-popup {
+      background: linear-gradient(135deg, #1a1a3a 0%, #2a2a4a 100%);
+      border: 1px solid rgba(255, 87, 87, 0.5);
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 90%;
+      width: 350px;
+      text-align: center;
+      animation: popupIn 0.3s ease;
+    }
+
+    @keyframes popupIn {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .error-popup-icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+    }
+
+    .error-popup-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #ff5757;
+      margin-bottom: 10px;
+    }
+
+    .error-popup-message {
+      font-size: 1rem;
+      color: #ccc;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .error-popup-btn {
+      padding: 12px 40px;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #ff5757, #ff3333);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    /* 예산 가이드 */
+    .budget-guide {
+      background: rgba(255, 215, 0, 0.1);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .budget-guide-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #ffd700;
+      margin-bottom: 8px;
+    }
+
+    .budget-guide-text {
+      font-size: 0.85rem;
+      color: #aaa;
+      line-height: 1.4;
+    }
+
+    /* 예산 상태 표시 */
+    .total-investment.budget-ok {
+      border: 2px solid rgba(0, 255, 150, 0.5);
+      background: rgba(0, 255, 150, 0.1);
+    }
+
+    .total-investment.budget-ok .total-value {
+      color: #00ff96;
+    }
+
+    .total-investment.budget-over {
+      border: 2px solid rgba(255, 87, 87, 0.5);
+      background: rgba(255, 87, 87, 0.1);
+    }
+
+    .total-investment.budget-over .total-value {
+      color: #ff5757;
+    }
+
+    .budget-status {
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+
+    .budget-status.ok {
+      color: #00ff96;
+    }
+
+    .budget-status.over {
+      color: #ff5757;
+    }
+
+    .budget-status.under {
+      color: #ffd700;
+    }
+
+    /* 피드백 에러 상태 */
+    .feedback-input.error {
+      border-color: rgba(255, 87, 87, 0.7);
+    }
+
+    .feedback-error {
+      color: #ff5757;
+      font-size: 0.75rem;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .feedback-counter {
+      font-size: 0.75rem;
+      color: #666;
+      text-align: right;
+      margin-top: 5px;
+    }
+
+    .feedback-counter.ok {
+      color: #00ff96;
+    }
+
+    .feedback-counter.error {
+      color: #ff5757;
+    }
+
+    /* 로딩 */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid transparent;
+      border-top-color: #ffd700;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* 로그아웃 버튼 */
+    .btn-logout {
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      background: transparent;
+      color: #888;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-logout:hover {
+      border-color: rgba(255, 255, 255, 0.4);
+      color: #fff;
+    }
+
+    /* 제출 완료 후 비활성화 */
+    .team-evaluation.disabled {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .team-evaluation.disabled .investment-slider {
+      pointer-events: none;
+    }
+
+    .team-evaluation.disabled .feedback-input {
+      pointer-events: none;
+    }
