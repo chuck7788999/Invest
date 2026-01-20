@@ -240,6 +240,22 @@
       btn.innerHTML = '<span class="loading"></span>제출 중...';
       btn.disabled = true;
 
+      // 제출 타임아웃 처리 (10초)
+      const submitTimeout = setTimeout(() => {
+        if (!isSubmitted) {
+          btn.innerHTML = '평가 제출하기';
+          btn.disabled = false;
+          showErrorPopup(
+            '제출 시간 초과',
+            '서버 응답이 없습니다. 다시 시도해주세요.',
+            '⏱️'
+          );
+        }
+      }, 10000);
+
+      // 타임아웃 ID를 저장하여 성공 시 취소
+      window._submitTimeout = submitTimeout;
+
       socket.emit('evaluator:submit', { sessionId, evaluations: submitData });
     }
 
@@ -304,10 +320,23 @@
     });
 
     socket.on('state:update', (state) => {
+      const prevPhase = currentState?.phase;
       currentState = state;
+
+      // phase 변경 감지하여 화면 전환 (evaluation:started 이벤트 미수신 대비)
+      if (prevPhase === 'waiting' && state.phase === 'evaluating' && !isSubmitted) {
+        showScreen('evaluation-screen');
+        renderTeamCards(state.teams);
+      }
     });
 
     socket.on('evaluator:submitted', ({ success }) => {
+      // 타임아웃 취소
+      if (window._submitTimeout) {
+        clearTimeout(window._submitTimeout);
+        window._submitTimeout = null;
+      }
+
       if (success) {
         isSubmitted = true;
         const savedData = currentState.teams.map(team => ({
@@ -319,6 +348,16 @@
         showCompleteSummary(savedData);
         showScreen('complete-screen');
         localStorage.removeItem('kt_eval_data');
+      } else {
+        // 제출 실패 시 버튼 복구
+        const btn = document.getElementById('submit-btn');
+        btn.innerHTML = '평가 제출하기';
+        btn.disabled = false;
+        showErrorPopup(
+          '제출 실패',
+          '제출에 실패했습니다. 다시 시도해주세요.',
+          '❌'
+        );
       }
     });
 

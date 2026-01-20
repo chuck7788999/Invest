@@ -281,9 +281,11 @@ io.on('connection', (socket) => {
   // 관리자: 평가 시작
   socket.on('admin:startEvaluation', () => {
     state.phase = 'evaluating';
+    // 평가 시작 시 totalEvaluators를 현재 접속자 수로 설정
+    state.totalEvaluators = state.connectedCount;
     broadcastState();
     io.to('evaluators').emit('evaluation:started');
-    console.log('[관리자] 평가 시작');
+    console.log(`[관리자] 평가 시작 (평가자 수: ${state.totalEvaluators}명)`);
   });
 
   // 관리자: 평가자 수 설정
