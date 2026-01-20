@@ -687,6 +687,20 @@
       filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8));
     }
 
+    .coin-stack-area.winner-highlight {
+      filter: drop-shadow(0 0 40px rgba(255, 200, 0, 1)) drop-shadow(0 0 80px rgba(255, 165, 0, 0.8));
+      animation: winnerGlow 0.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes winnerGlow {
+      0% {
+        filter: drop-shadow(0 0 40px rgba(255, 200, 0, 1)) drop-shadow(0 0 80px rgba(255, 165, 0, 0.8));
+      }
+      100% {
+        filter: drop-shadow(0 0 60px rgba(255, 215, 0, 1)) drop-shadow(0 0 120px rgba(255, 140, 0, 0.9));
+      }
+    }
+
     .coin-stack-area.dimmed {
       opacity: 0.3;
       filter: grayscale(70%);

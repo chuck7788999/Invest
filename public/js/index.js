@@ -389,39 +389,49 @@
     }
 
     // 코인 그리기 (떨어지는 코인)
-    function drawCoin(ctx, x, y, rotation) {
+    function drawCoin(ctx, x, y, rotation, isWinnerCoin = false) {
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(rotation);
 
-      const radius = COIN_CONFIG.COIN_RADIUS;
+      // 1위 코인은 더 크고 화려하게
+      const baseRadius = COIN_CONFIG.COIN_RADIUS;
+      const radius = isWinnerCoin ? baseRadius * 1.3 : baseRadius;
 
-      // 코인 그라데이션
+      // 코인 그라데이션 (1위 코인은 더 밝고 화려하게)
       const grad = ctx.createLinearGradient(-radius, -radius, radius, radius);
-      grad.addColorStop(0, '#FFD700');
-      grad.addColorStop(0.3, '#FFF8DC');
-      grad.addColorStop(0.5, '#FFD700');
-      grad.addColorStop(0.7, '#B8860B');
-      grad.addColorStop(1, '#DAA520');
+      if (isWinnerCoin) {
+        grad.addColorStop(0, '#FFEC8B');
+        grad.addColorStop(0.2, '#FFFACD');
+        grad.addColorStop(0.5, '#FFD700');
+        grad.addColorStop(0.8, '#FFA500');
+        grad.addColorStop(1, '#FF8C00');
+      } else {
+        grad.addColorStop(0, '#FFD700');
+        grad.addColorStop(0.3, '#FFF8DC');
+        grad.addColorStop(0.5, '#FFD700');
+        grad.addColorStop(0.7, '#B8860B');
+        grad.addColorStop(1, '#DAA520');
+      }
 
       // 코인 외곽
       ctx.beginPath();
       ctx.arc(0, 0, radius, 0, Math.PI * 2);
       ctx.fillStyle = grad;
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = 'rgba(255, 215, 0, 0.5)';
+      ctx.shadowBlur = isWinnerCoin ? 20 : 8;
+      ctx.shadowColor = isWinnerCoin ? 'rgba(255, 200, 0, 0.9)' : 'rgba(255, 215, 0, 0.5)';
       ctx.fill();
 
       // 내부 원
       ctx.beginPath();
       ctx.arc(0, 0, radius * 0.75, 0, Math.PI * 2);
-      ctx.strokeStyle = '#B8860B';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = isWinnerCoin ? '#FF8C00' : '#B8860B';
+      ctx.lineWidth = isWinnerCoin ? 3 : 2;
       ctx.stroke();
 
       // ₩ 심볼
       ctx.shadowBlur = 0;
-      ctx.fillStyle = '#8B6914';
+      ctx.fillStyle = isWinnerCoin ? '#CD6600' : '#8B6914';
       ctx.font = `bold ${radius * 0.9}px Arial`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -503,8 +513,8 @@
           coinStacks[coin.rankIndex]++;
           fallingCoins.splice(i, 1);
         } else {
-          // 코인 그리기
-          drawCoin(coinCtx, coin.x, coin.y, coin.rotation);
+          // 코인 그리기 (1위 코인은 더 화려하게)
+          drawCoin(coinCtx, coin.x, coin.y, coin.rotation, coin.isWinnerCoin);
         }
       }
 
@@ -905,7 +915,7 @@
       });
     }
 
-    // 1위 점수 공개 (1위만 코인 추가)
+    // 1위 점수 공개 (1위만 코인 추가) - 과장된 효과
     function revealFirstPlace(teams) {
       document.getElementById('deadheat-overlay').style.display = 'none';
 
@@ -914,9 +924,11 @@
       const secondHeight = (teams[1].totalInvestment / maxInvestment) * COIN_CONFIG.MAX_STACK_HEIGHT;
 
       // 1위가 추가해야 할 높이 (현재 2위 높이에서 1위 높이까지)
-      const additionalHeight = firstHeight - secondHeight;
+      const actualDiff = firstHeight - secondHeight;
+      // 과장된 높이: 최소 80px, 실제 차이의 3배, 최대 200px
+      const exaggeratedHeight = Math.max(80, Math.min(actualDiff * 3, 200));
 
-      console.log(`Step 5: 1위 높이 = ${firstHeight}px, 추가 높이 = ${additionalHeight}px, 현재 스택:`, coinStacks);
+      console.log(`Step 5: 1위 높이 = ${firstHeight}px, 실제 차이 = ${actualDiff}px, 과장된 높이 = ${exaggeratedHeight}px`);
 
       // 3,4위 정보 표시
       for (let i = 3; i <= 4; i++) {
@@ -932,15 +944,15 @@
       const area2 = document.getElementById('stack-area-2');
       if (area1) {
         area1.classList.remove('dimmed');
-        area1.classList.add('highlighted');
+        area1.classList.add('highlighted', 'winner-highlight');
       }
       if (area2) {
         area2.classList.remove('highlighted');
         area2.classList.add('dimmed');
       }
 
-      // 1위만 추가 코인 (1위=0)
-      addCoinsToRank(0, additionalHeight, 4000, () => {
+      // 1위에 과장된 코인 효과 (더 많은 코인, 더 빠른 속도)
+      addCoinsToRankExaggerated(0, exaggeratedHeight, 5000, () => {
         // 1위, 2위 정보 표시
         setTimeout(() => {
           const info1 = document.getElementById('rank-info-1');
@@ -949,6 +961,54 @@
           if (info2) info2.classList.add('visible', 'revealed');
         }, 500);
       });
+    }
+
+    // 1위 전용 과장된 코인 추가 함수
+    function addCoinsToRankExaggerated(rankIndex, additionalHeight, duration, callback) {
+      const additionalCoins = Math.floor(additionalHeight / COIN_CONFIG.COIN_THICKNESS);
+      const newTarget = coinStacks[rankIndex] + additionalCoins;
+      targetStacks[rankIndex] = newTarget;
+
+      console.log(`addCoinsToRankExaggerated: rank=${rankIndex}, additionalCoins=${additionalCoins}, newTarget=${newTarget}`);
+
+      const stackX = stackPositions[rankIndex];
+      if (!stackX) {
+        console.warn(`Stack position not found for rank ${rankIndex}`);
+        return;
+      }
+
+      // 더 짧은 간격으로 더 많은 코인 생성 (과장 효과)
+      const interval = Math.max(30, duration / (additionalCoins * 2));
+      let coinsAdded = 0;
+      const totalCoinsToAdd = additionalCoins * 2; // 2배의 코인 효과
+
+      const coinInterval = setInterval(() => {
+        if (coinsAdded >= totalCoinsToAdd) {
+          clearInterval(coinInterval);
+          // 콜백은 모든 코인이 착지한 후
+          setTimeout(() => {
+            if (callback) callback();
+          }, 1500);
+          return;
+        }
+
+        // 더 넓은 범위에서 코인 생성 (더 화려한 효과)
+        const spreadRange = 120;
+        const x = stackX + (Math.random() - 0.5) * spreadRange;
+
+        fallingCoins.push({
+          x: x,
+          y: -50 - Math.random() * 100,
+          vy: 2 + Math.random() * 4, // 더 빠른 초기 속도
+          vx: (Math.random() - 0.5) * 3,
+          rotation: Math.random() * Math.PI * 2,
+          rotationSpeed: (Math.random() - 0.5) * 0.3,
+          rankIndex: rankIndex,
+          isWinnerCoin: true // 1위 코인 표시
+        });
+
+        coinsAdded++;
+      }, interval);
     }
 
     // 1위 하이라이트
