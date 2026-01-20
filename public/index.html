@@ -1216,7 +1216,9 @@
       </div>
 
       <div class="admin-section">
-        <button class="admin-btn danger" onclick="resetSystem()">🔄 전체 리셋</button>
+        <button class="admin-btn danger" onclick="resetSystem()">전체 리셋</button>
+        <button class="admin-btn primary" onclick="saveSession()" style="margin-top: 8px;">결과 저장 (DB)</button>
+        <a href="/history" class="admin-btn secondary" style="display: block; text-align: center; text-decoration: none; margin-top: 8px;">이력 보기</a>
       </div>
 
       <hr class="admin-divider">
@@ -1474,6 +1476,28 @@
     function resetSystem() {
       if (confirm('전체 시스템을 리셋하시겠습니까?')) {
         socket.emit('admin:reset');
+      }
+    }
+
+    async function saveSession() {
+      const name = prompt('이벤트 이름을 입력하세요:', `Investment Day ${new Date().toLocaleDateString('ko-KR')}`);
+      if (!name) return;
+
+      try {
+        const response = await fetch('/api/events/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          alert('결과가 저장되었습니다.');
+        } else {
+          alert('저장 실패: ' + (data.error || 'DB 연결이 필요합니다.'));
+        }
+      } catch (error) {
+        alert('저장 중 오류가 발생했습니다.');
       }
     }
 

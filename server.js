@@ -1,8 +1,10 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
+const { connectDB, getEvents, getEventById, deleteEvent, saveCurrentSession } = require('./db/models');
 
 const app = express();
 const server = http.createServer(app);
@@ -31,6 +33,10 @@ app.get('/admin', (req, res) => {
 
 app.get('/coin_test', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'coin_test.html'));
+});
+
+app.get('/history', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-history.html'));
 });
 
 // static 파일은 라우트 이후에 처리
@@ -69,6 +75,57 @@ app.get('/api/session/:sessionId', (req, res) => {
     res.json({ success: true, evaluator });
   } else {
     res.json({ success: false });
+  }
+});
+
+// API: 이벤트 이력 조회
+app.get('/api/events', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = parseInt(req.query.skip) || 0;
+    const events = await getEvents({}, { limit, skip });
+    res.json({ success: true, events });
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
+});
+
+// API: 단일 이벤트 조회
+app.get('/api/events/:eventId', async (req, res) => {
+  try {
+    const event = await getEventById(req.params.eventId);
+    if (event) {
+      res.json({ success: true, event });
+    } else {
+      res.json({ success: false, error: 'Event not found' });
+    }
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
+});
+
+// API: 이벤트 삭제
+app.delete('/api/events/:eventId', async (req, res) => {
+  try {
+    const result = await deleteEvent(req.params.eventId);
+    res.json({ success: result });
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
+});
+
+// API: 현재 세션 저장
+app.post('/api/events/save', async (req, res) => {
+  try {
+    const { name } = req.body;
+    const event = await saveCurrentSession(state, name);
+    if (event) {
+      res.json({ success: true, eventId: event._id });
+    } else {
+      res.json({ success: false, error: 'No data to save or DB not connected' });
+    }
+  } catch (error) {
+    res.json({ success: false, error: error.message });
   }
 });
 
@@ -398,14 +455,25 @@ io.on('connection', (socket) => {
 
 // ============ 서버 시작 ============
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`
+
+async function startServer() {
+  // MongoDB 연결 시도
+  const dbConnected = await connectDB();
+
+  server.listen(PORT, () => {
+    console.log(`
 ╔══════════════════════════════════════════════════════════════╗
 ║     Business Architect Investment Day                        ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  랜딩 페이지:  http://localhost:${PORT}                        ║
 ║  메인 화면:    http://localhost:${PORT}/main                   ║
 ║  모바일 평가:  http://localhost:${PORT}/mobile                 ║
+║  이벤트 이력:  http://localhost:${PORT}/history                ║
+╠══════════════════════════════════════════════════════════════╣
+║  DB 상태: ${dbConnected ? 'MongoDB 연결됨 ✓' : '메모리 모드 (DB 미연결)'}                      ║
 ╚══════════════════════════════════════════════════════════════╝
-  `);
-});
+    `);
+  });
+}
+
+startServer();
