@@ -11,7 +11,8 @@
       background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0a0a2a 100%);
       min-height: 100vh;
       color: #fff;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
     }
 
     /* 파티클 배경 */
@@ -367,7 +368,7 @@
       position: relative;
       z-index: 1;
       padding: 40px;
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
@@ -517,7 +518,7 @@
 
     .connection-list {
       margin-top: 15px;
-      max-height: 150px;
+      max-height: 200px;
       overflow-y: auto;
     }
 
