@@ -1,3 +1,11 @@
+    // ============ 기본 팀 데이터 (서버 응답 전 즉시 표시용) ============
+    const defaultTeams = [
+      { id: 1, name: '1조', topic: 'kt cloud 상품문의 여정의 동반자, Journey' },
+      { id: 2, name: '2조', topic: '세일즈 에이전트, Briefy' },
+      { id: 3, name: '3조', topic: '효율화를 위한 Jira 자동화 서비스, Ji-Key-Ra' },
+      { id: 4, name: '4조', topic: '출장품의 프로세스 효율화, TripON' }
+    ];
+
     // ============ 상태 관리 ============
     const socket = io({
       transports: ['polling', 'websocket'],  // 폴링 우선, 웹소켓 업그레이드 (Render 호환)
@@ -1358,6 +1366,9 @@
     });
 
     // ============ 초기화 ============
+    // 서버 응답 전 기본 팀 데이터로 즉시 렌더링
+    renderTeams(defaultTeams);
+
     createParticles();
     generateQR();
 
