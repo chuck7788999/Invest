@@ -4,6 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Business Architect Investment Day</title>
+
+  <!-- Main 페이지 리소스 프리로드 -->
+  <link rel="prefetch" href="/main">
+  <link rel="preload" href="css/index.css" as="style">
+  <link rel="preload" href="js/index.js" as="script">
+  <link rel="preconnect" href="https://cdn.socket.io">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="prefetch" href="https://cdn.socket.io/4.7.2/socket.io.min.js">
+  <link rel="prefetch" href="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
+  <!-- BGM 프리로드 -->
+  <link rel="prefetch" href="/sounds/bgm-waiting.mp3" as="audio">
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
   <script src="js/sound-manager.js"></script>
   <style>
@@ -313,8 +325,31 @@
       window.location.href = '/main';
     }
 
+    // Main 페이지 프리로드 (숨겨진 iframe으로 미리 로드)
+    function preloadMainPage() {
+      // 이미 프리로드 중이면 중단
+      if (document.getElementById('preload-frame')) return;
+
+      const iframe = document.createElement('iframe');
+      iframe.id = 'preload-frame';
+      iframe.src = '/main';
+      iframe.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;';
+      document.body.appendChild(iframe);
+
+      // Socket 연결 프리로드를 위해 fetch도 사용
+      fetch('/api/state').catch(() => {});
+
+      console.log('[Landing] Main 페이지 프리로드 시작');
+    }
+
     // 초기화
     createParticles();
+
+    // 페이지 로드 후 Main 페이지 프리로드 시작
+    window.addEventListener('load', () => {
+      // 약간의 딜레이 후 프리로드 (landing 페이지 렌더링 우선)
+      setTimeout(preloadMainPage, 500);
+    });
   </script>
 </body>
 </html>
