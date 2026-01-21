@@ -536,6 +536,30 @@
       100% { transform: scale(1); opacity: 1; }
     }
 
+    /* 즉시 시작 버튼 */
+    .instant-start-btn {
+      margin-top: 20px;
+      padding: 15px 40px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, #FF6B35, #F7931E);
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 5px 20px rgba(255, 107, 53, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .instant-start-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(255, 107, 53, 0.6);
+    }
+
+    .instant-start-btn:active {
+      transform: translateY(0);
+    }
+
     /* Phase 1: 평가 진행 화면 */
     #evaluation-screen {
       display: none;

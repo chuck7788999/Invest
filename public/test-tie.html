@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>동점 시나리오 테스트</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 40px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+      color: #ffd700;
+    }
+
+    .test-section {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+
+    .test-section h2 {
+      margin-bottom: 20px;
+      color: #4ecdc4;
+    }
+
+    .test-description {
+      color: #aaa;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .test-btn {
+      display: inline-block;
+      padding: 15px 30px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-warning {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: #fff;
+    }
+
+    .btn-warning:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(245, 87, 108, 0.4);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #11998e, #38ef7d);
+      color: #fff;
+    }
+
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(56, 239, 125, 0.4);
+    }
+
+    .status {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+
+    .status-label {
+      color: #888;
+      margin-bottom: 5px;
+    }
+
+    .status-value {
+      color: #4ecdc4;
+    }
+
+    .team-scores {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .team-score {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .team-score .name {
+      font-weight: 600;
+      color: #ffd700;
+      margin-bottom: 5px;
+    }
+
+    .team-score .amount {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 30px;
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .note {
+      background: rgba(255, 215, 0, 0.1);
+      border-left: 4px solid #ffd700;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .note strong {
+      color: #ffd700;
+    }
+  </style>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>🎯 동점 시나리오 테스트</h1>
+
+    <div class="test-section">
+      <h2>1. 완전 동점 (박빙의 승부)</h2>
+      <p class="test-description">
+        1위와 2위가 완전히 같은 투자금을 받은 경우입니다.<br>
+        "박빙의 승부" 화면이 표시되며, 3위와 4위의 평가로 최종 1위를 가린다는 안내가 나타납니다.
+      </p>
+      <button class="test-btn btn-warning" onclick="setTieScenario()">동점 데이터 설정</button>
+      <button class="test-btn btn-primary" onclick="goToMain()">메인 화면으로 이동</button>
+
+      <div class="note">
+        <strong>테스트 방법:</strong><br>
+        1. "동점 데이터 설정" 클릭<br>
+        2. "메인 화면으로 이동" 클릭<br>
+        3. MC 컨트롤에서 "발표 시작" 클릭<br>
+        4. 다음 단계를 눌러 Step 4 (데드히트)까지 진행
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h2>2. 일반 데드히트 (차이 있음)</h2>
+      <p class="test-description">
+        1위가 2위보다 투자금을 더 많이 받은 일반적인 경우입니다.<br>
+        "마지막 투자금의 향방은?" 데드히트 화면이 표시됩니다.
+      </p>
+      <button class="test-btn btn-success" onclick="setNormalScenario()">일반 데이터 설정</button>
+      <button class="test-btn btn-primary" onclick="goToMain()">메인 화면으로 이동</button>
+    </div>
+
+    <div class="test-section">
+      <h2>현재 서버 상태</h2>
+      <div class="status">
+        <div class="status-label">Phase:</div>
+        <div class="status-value" id="current-phase">-</div>
+      </div>
+      <div class="status">
+        <div class="status-label">Presentation Step:</div>
+        <div class="status-value" id="current-step">-</div>
+      </div>
+      <div class="team-scores" id="team-scores">
+        <!-- 동적으로 생성 -->
+      </div>
+      <button class="test-btn btn-primary" onclick="refreshStatus()" style="margin-top: 20px;">상태 새로고침</button>
+      <button class="test-btn btn-warning" onclick="resetSystem()">시스템 리셋</button>
+    </div>
+
+    <a href="/main" class="back-link">← 메인 화면으로 돌아가기</a>
+  </div>
+
+  <script>
+    const socket = io({
+      transports: ['polling', 'websocket'],
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000
+    });
+
+    let currentState = null;
+
+    socket.on('connect', () => {
+      console.log('Connected to server');
+      socket.emit('admin:join');
+    });
+
+    socket.on('state:update', (state) => {
+      currentState = state;
+      updateStatusDisplay(state);
+    });
+
+    function updateStatusDisplay(state) {
+      document.getElementById('current-phase').textContent = state.phase;
+      document.getElementById('current-step').textContent = state.presentationStep;
+
+      const scoresContainer = document.getElementById('team-scores');
+      // 발표 순서대로 정렬
+      const orderedTeams = state.presentationOrder
+        ? state.presentationOrder.map(id => state.teams.find(t => t.id === id))
+        : state.teams;
+
+      scoresContainer.innerHTML = orderedTeams.map(team => `
+        <div class="team-score">
+          <div class="name">${team.name}</div>
+          <div class="amount">${team.totalInvestment}억원</div>
+        </div>
+      `).join('');
+    }
+
+    function setTieScenario() {
+      // 1위와 2위가 동점인 시나리오 (예: 둘 다 15억원)
+      socket.emit('test:setScores', {
+        scores: {
+          1: 12,  // 1조
+          2: 15,  // 2조
+          3: 15,  // 3조
+          4: 8    // 4조
+        }
+      });
+      alert('동점 시나리오가 설정되었습니다.\n\n발표 순서(2조→4조→3조→1조) 기준으로:\n- 1위: 2조, 3조 (15억원 동점)\n- 3위: 1조 (12억원)\n- 4위: 4조 (8억원)\n\n메인 화면에서 발표를 진행해보세요.');
+    }
+
+    function setNormalScenario() {
+      // 일반 시나리오 (1위가 2위보다 높음)
+      socket.emit('test:setScores', {
+        scores: {
+          1: 10,  // 1조
+          2: 18,  // 2조
+          3: 14,  // 3조
+          4: 8    // 4조
+        }
+      });
+      alert('일반 시나리오가 설정되었습니다.\n\n발표 순서(2조→4조→3조→1조) 기준으로:\n- 1위: 2조 (18억원)\n- 2위: 3조 (14억원)\n- 3위: 1조 (10억원)\n- 4위: 4조 (8억원)\n\n메인 화면에서 발표를 진행해보세요.');
+    }
+
+    function goToMain() {
+      window.location.href = '/main';
+    }
+
+    function refreshStatus() {
+      socket.emit('admin:join');
+    }
+
+    function resetSystem() {
+      if (confirm('시스템을 리셋하시겠습니까?')) {
+        socket.emit('admin:reset');
+        setTimeout(() => {
+          alert('시스템이 리셋되었습니다.');
+          refreshStatus();
+        }, 500);
+      }
+    }
+  </script>
+</body>
+</html>

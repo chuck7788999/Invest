@@ -1279,15 +1279,27 @@
         handlePhaseSound(state.phase);
       }
 
+      // 화면 전환 (항상 실행)
+      console.log('[State] Phase:', state.phase, 'PrevPhase:', prevPhase);
       if (state.phase === 'waiting') {
         showScreen('waiting-screen');
       } else if (state.phase === 'evaluating') {
+        console.log('[State] Switching to evaluation-screen');
         showScreen('evaluation-screen');
         renderEvaluationTeams(state.teams);
       } else if (state.phase === 'results') {
         showScreen('evaluation-screen');
       } else if (state.phase === 'presenting') {
         showScreen('results-screen');
+      }
+    });
+
+    // 평가 시작 이벤트 (추가 안전장치)
+    socket.on('evaluation:started', () => {
+      console.log('[Socket] evaluation:started received');
+      showScreen('evaluation-screen');
+      if (currentState?.teams) {
+        renderEvaluationTeams(currentState.teams);
       }
     });
 
@@ -1377,6 +1389,23 @@
       initVolumeUI();
     }, 500);
 
+    // Landing에서 BGM이 시작되었는지 확인하고 자동 재생
+    const bgmWasPlaying = sessionStorage.getItem('bgm_playing') === 'true';
+    if (bgmWasPlaying) {
+      console.log('[Main] Landing에서 BGM 시작됨, 자동 재생 시도');
+      // Howler 컨텍스트 활성화 후 BGM 재생
+      if (typeof Howler !== 'undefined' && Howler.ctx) {
+        Howler.ctx.resume().then(() => {
+          SoundManager.playBGM('waiting');
+          console.log('[Main] BGM 자동 재생 성공');
+        }).catch(() => {
+          console.log('[Main] BGM 자동 재생 실패, 클릭 대기');
+        });
+      } else {
+        SoundManager.playBGM('waiting');
+      }
+    }
+
     // 브라우저 자동재생 정책 대응: 사용자 인터랙션 감지 후 BGM 활성화
     let audioUnlocked = false;
     function unlockAudio() {
@@ -1388,9 +1417,10 @@
         Howler.ctx?.resume();
       }
 
-      // 현재 phase에 맞는 BGM 시작 (playBGM 내부에서 같은 BGM 재생 중이면 무시됨)
-      if (currentState?.phase) {
-        handlePhaseSound(currentState.phase);
+      // Landing에서 BGM이 시작되었거나 현재 phase에 맞는 BGM 시작
+      if (sessionStorage.getItem('bgm_playing') === 'true' || currentState?.phase) {
+        const phase = currentState?.phase || 'waiting';
+        handlePhaseSound(phase);
       }
 
       console.log('[Audio] Unlocked by user interaction');

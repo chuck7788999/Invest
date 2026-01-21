@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="css/index.css">
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+  <script src="js/sound-manager.js"></script>
 </head>
 <body>
   <!-- 파티클 배경 -->
@@ -71,6 +73,24 @@
         <button class="admin-btn danger" onclick="resetSystem()">전체 리셋</button>
         <button class="admin-btn primary" onclick="saveSession()" style="margin-top: 8px;">결과 저장 (DB)</button>
         <a href="/history" class="admin-btn secondary" style="display: block; text-align: center; text-decoration: none; margin-top: 8px;">이력 보기</a>
+      </div>
+
+      <hr class="admin-divider">
+
+      <!-- 사운드 컨트롤 -->
+      <div class="admin-section">
+        <div class="admin-label">사운드 설정</div>
+        <div class="volume-control">
+          <button type="button" class="volume-mute-btn" id="mute-btn" onclick="toggleMute()" title="음소거 토글">🔊</button>
+          <input type="range" class="volume-slider" id="volume-slider"
+                 min="0" max="100" value="70" title="마스터 볼륨"
+                 oninput="setVolume(this.value)">
+          <span class="volume-value" id="volume-value">70%</span>
+        </div>
+        <div class="sound-test-btns">
+          <button type="button" class="admin-btn secondary small" onclick="testSound('bgm')">BGM 테스트</button>
+          <button type="button" class="admin-btn secondary small" onclick="testSound('sfx')">효과음 테스트</button>
+        </div>
       </div>
 
       <hr class="admin-divider">
@@ -173,6 +193,7 @@
           <div class="connection-title">접속 현황</div>
           <div class="connection-count"><span id="connected-count">0</span>명 접속</div>
           <div class="connection-list" id="connection-list"></div>
+          <button class="instant-start-btn" id="instant-start-btn" onclick="startEvaluation()">🚀 즉시 시작</button>
         </div>
       </div>
     </div>
@@ -226,6 +247,26 @@
       </div>
       <div class="deadheat-remaining" id="deadheat-remaining"></div>
       <div class="deadheat-suspense">마지막 투자금의 향방은?</div>
+    </div>
+  </div>
+
+  <!-- 박빙의 승부 (실제 동점) 오버레이 -->
+  <div class="tiebreaker-overlay" id="tiebreaker-overlay">
+    <div class="tiebreaker-content">
+      <div class="tiebreaker-icon">⚔️</div>
+      <div class="tiebreaker-title">박빙의 승부!</div>
+      <div class="tiebreaker-amount" id="tiebreaker-amount"></div>
+      <div class="tiebreaker-teams">
+        <span id="tiebreaker-team1"></span>
+        <span class="tiebreaker-vs">VS</span>
+        <span id="tiebreaker-team2"></span>
+      </div>
+      <div class="tiebreaker-message">
+        1위와 2위가 <strong>완전 동점</strong>입니다!
+      </div>
+      <div class="tiebreaker-rule">
+        3위와 4위의 평가 결과로<br>최종 1위를 가립니다
+      </div>
     </div>
   </div>
 

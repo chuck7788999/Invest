@@ -13,7 +13,9 @@
       "Bash(git push:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\n모바일 로그인 문제 수정 및 입력 예시 변경\n\n- Socket.IO 전송 방식을 폴링+웹소켓으로 변경 \\(Vercel 호환성\\)\n- 성함 입력 예시: \"홍길동 부사장\" → \"홍길동님\"\n- 직책 라벨 제거\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nMongoDB + Render 배포 환경 구축\n\n- MongoDB Atlas 연결 및 이벤트 이력 저장 기능 추가\n- 이벤트 이력 조회/삭제 API 추가 \\(/api/events\\)\n- 이력 보기 페이지 추가 \\(/history\\)\n- MC 컨트롤에 결과 저장/이력 보기 버튼 추가\n- Render 배포 설정 파일 추가 \\(render.yaml\\)\n- 환경변수 템플릿 추가 \\(.env.example\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\n팀 정보 수정 및 README 업데이트\n\n- 팀 토픽 정보 올바른 값으로 수정\n- README에 팀 정보 및 발표 순서 기록\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\n팀 정보 수정 및 README 업데이트\n\n- 팀 토픽 정보 올바른 값으로 수정\n- README에 팀 정보 및 발표 순서 기록\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(xargs kill:*)",
+      "Bash(kill:*)"
     ]
   }
 }
